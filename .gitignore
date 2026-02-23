@@ -1,0 +1,13 @@
+# Project-level ignores
+documents/
+
+# Cursor/IDE local state
+.cursor/
+.idea/
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+frontend/.env
