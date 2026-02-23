@@ -1,0 +1,46 @@
+<?php
+
+namespace App\Http\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class StorePropertyRequest extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     */
+    public function authorize(): bool
+    {
+        return true; // Authorization handled in controller
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     */
+    public function rules(): array
+    {
+        return [
+            'title' => ['required', 'string', 'max:255'],
+            'description' => ['required', 'string', 'min:50'],
+            'property_type' => ['required', 'in:house,apartment,condo,land,commercial'],
+            'status' => ['required', 'in:for_sale,for_rent,sold,pending'],
+            'price' => ['required', 'numeric', 'min:0'],
+            'address' => ['required', 'string', 'max:255'],
+            'city' => ['required', 'string', 'max:100'],
+            'state' => ['required', 'string', 'max:100'],
+            'zip_code' => ['required', 'string', 'max:20'],
+            'country' => ['sometimes', 'string', 'max:100'],
+            'bedrooms' => ['nullable', 'integer', 'min:0'],
+            'bathrooms' => ['nullable', 'integer', 'min:0'],
+            'square_feet' => ['nullable', 'integer', 'min:0'],
+            'year_built' => ['nullable', 'integer', 'min:1800', 'max:' . date('Y')],
+            'lot_size' => ['nullable', 'integer', 'min:0'],
+            'amenities' => ['nullable', 'array'],
+            'amenities.*' => ['exists:amenities,id'],
+            'images' => ['nullable', 'array', 'max:20'],
+            'images.*' => ['image', 'mimes:jpeg,jpg,png,gif', 'max:5120'], // 5MB max
+        ];
+    }
+}
