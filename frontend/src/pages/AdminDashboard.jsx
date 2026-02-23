@@ -1,0 +1,340 @@
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import {
+  UsersIcon,
+  HomeIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  EnvelopeIcon,
+  ChartBarIcon,
+} from '@heroicons/react/24/outline';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import adminService from '../services/adminService';
+import AdminLayout from '../components/admin/AdminLayout';
+
+const AdminDashboard = () => {
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchDashboard();
+  }, []);
+
+  const fetchDashboard = async () => {
+    try {
+      setLoading(true);
+      const data = await adminService.getDashboard();
+      setDashboardData(data);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to load dashboard');
+      console.error('Dashboard error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">{error}</p>
+          <button
+            onClick={fetchDashboard}
+            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const stats = dashboardData?.statistics || {};
+
+  const statCards = [
+    {
+      title: 'Total Users',
+      value: stats.total_users || 0,
+      icon: UsersIcon,
+      color: 'bg-blue-500',
+      link: '/admin/users',
+    },
+    {
+      title: 'Total Properties',
+      value: stats.total_properties || 0,
+      icon: HomeIcon,
+      color: 'bg-green-500',
+      link: '/admin/properties',
+    },
+    {
+      title: 'Active Listings',
+      value: stats.active_listings || 0,
+      icon: CheckCircleIcon,
+      color: 'bg-purple-500',
+    },
+    {
+      title: 'Pending Approvals',
+      value: stats.pending_approvals || 0,
+      icon: ClockIcon,
+      color: 'bg-yellow-500',
+      link: '/admin/properties?is_approved=false',
+    },
+    {
+      title: 'Pending Reviews',
+      value: stats.pending_reviews || 0,
+      icon: ClockIcon,
+      color: 'bg-orange-500',
+      link: '/admin/reviews',
+    },
+    {
+      title: 'Total Messages',
+      value: stats.total_messages || 0,
+      icon: EnvelopeIcon,
+      color: 'bg-pink-500',
+    },
+  ];
+
+  return (
+    <AdminLayout>
+      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+          <p className="mt-2 text-gray-600">Overview of your platform</p>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="mb-8 flex gap-4">
+          <Link
+            to="/admin/analytics"
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+          >
+            <ChartBarIcon className="h-5 w-5" />
+            View Analytics
+          </Link>
+        </div>
+
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {statCards.map((stat, index) => {
+            const Icon = stat.icon;
+            const content = (
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">{stat.title}</p>
+                    <p className="text-3xl font-bold text-gray-900 mt-2">
+                      {stat.value.toLocaleString()}
+                    </p>
+                  </div>
+                  <div className={`${stat.color} p-3 rounded-lg`}>
+                    <Icon className="h-8 w-8 text-white" />
+                  </div>
+                </div>
+              </div>
+            );
+
+            if (stat.link) {
+              return (
+                <Link key={index} to={stat.link}>
+                  {content}
+                </Link>
+              );
+            }
+
+            return <div key={index}>{content}</div>;
+          })}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Recent Properties */}
+          <div className="bg-white rounded-lg shadow">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold text-gray-900">Recent Properties</h2>
+                <Link
+                  to="/admin/properties"
+                  className="text-indigo-600 hover:text-indigo-700 text-sm font-medium"
+                >
+                  View All
+                </Link>
+              </div>
+            </div>
+            <div className="p-6">
+              {dashboardData?.recent_properties?.length === 0 ? (
+                <p className="text-gray-500 text-center py-8">No properties yet</p>
+              ) : (
+                <div className="space-y-4">
+                  {dashboardData?.recent_properties?.map((property) => (
+                    <Link
+                      key={property.id}
+                      to={`/properties/${property.id}`}
+                      className="block p-4 border border-gray-200 rounded-lg hover:border-indigo-300 hover:bg-indigo-50 transition"
+                    >
+                      <div className="flex items-start gap-4">
+                        {property.primary_image && (
+                          <img
+                            src={
+                              property.primary_image.image_url ||
+                              property.primary_image.thumbnail_url
+                            }
+                            alt={property.title}
+                            className="w-20 h-20 object-cover rounded"
+                          />
+                        )}
+                        <div className="flex-1">
+                          <h3 className="font-medium text-gray-900">{property.title}</h3>
+                          <p className="text-sm text-gray-600 mt-1">
+                            {property.address}, {property.city}, {property.state}
+                          </p>
+                          <div className="flex items-center gap-4 mt-2">
+                            <span className="text-sm font-semibold text-indigo-600">
+                              ${property.price?.toLocaleString()}
+                            </span>
+                            {!property.is_approved && (
+                              <span className="text-xs px-2 py-1 rounded bg-yellow-100 text-yellow-800">
+                                Pending
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Recent Users */}
+          <div className="bg-white rounded-lg shadow">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold text-gray-900">Recent Users</h2>
+                <Link
+                  to="/admin/users"
+                  className="text-indigo-600 hover:text-indigo-700 text-sm font-medium"
+                >
+                  View All
+                </Link>
+              </div>
+            </div>
+            <div className="p-6">
+              {dashboardData?.recent_users?.length === 0 ? (
+                <p className="text-gray-500 text-center py-8">No users yet</p>
+              ) : (
+                <div className="space-y-4">
+                  {dashboardData?.recent_users?.map((user) => (
+                    <Link
+                      key={user.id}
+                      to={`/admin/users`}
+                      className="block p-4 border border-gray-200 rounded-lg hover:border-indigo-300 hover:bg-indigo-50 transition"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium text-gray-900">{user.name}</p>
+                          <p className="text-sm text-gray-600">{user.email}</p>
+                        </div>
+                        <span
+                          className={`text-xs px-2 py-1 rounded ${
+                            user.role === 'admin'
+                              ? 'bg-red-100 text-red-800'
+                              : user.role === 'agent'
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-gray-100 text-gray-800'
+                          }`}
+                        >
+                          {user.role}
+                        </span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Charts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+          {/* Users by Role Chart */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Users by Role</h2>
+            {dashboardData?.users_by_role && Object.keys(dashboardData.users_by_role).length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart
+                  data={Object.entries(dashboardData.users_by_role).map(([role, count]) => ({
+                    name: role.charAt(0).toUpperCase() + role.slice(1),
+                    count,
+                  }))}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#4F46E5" />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-gray-500 text-center py-12">No data available</p>
+            )}
+          </div>
+
+          {/* Properties by Status Chart */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Properties by Status</h2>
+            {dashboardData?.properties_by_status && Object.keys(dashboardData.properties_by_status).length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart
+                  data={Object.entries(dashboardData.properties_by_status).map(([status, count]) => ({
+                    name: status.replace('_', ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
+                    count,
+                  }))}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#10B981" />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-gray-500 text-center py-12">No data available</p>
+            )}
+          </div>
+        </div>
+
+        {/* Popular Locations */}
+        {dashboardData?.popular_locations && dashboardData.popular_locations.length > 0 && (
+          <div className="bg-white rounded-lg shadow p-6 mt-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Popular Locations</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              {dashboardData.popular_locations.slice(0, 10).map((location, index) => (
+                <div key={index} className="p-4 border border-gray-200 rounded-lg">
+                  <p className="font-medium text-gray-900">
+                    {location.city}, {location.state}
+                  </p>
+                  <p className="text-sm text-gray-600 mt-1">{location.count} properties</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </AdminLayout>
+  );
+};
+
+export default AdminDashboard;
