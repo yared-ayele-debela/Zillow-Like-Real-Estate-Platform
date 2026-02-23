@@ -1,0 +1,221 @@
+import { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import useAuthStore from './store/authStore';
+import LoginForm from './components/auth/LoginForm';
+import RegisterForm from './components/auth/RegisterForm';
+import ForgotPasswordForm from './components/auth/ForgotPasswordForm';
+import ResetPasswordForm from './components/auth/ResetPasswordForm';
+import Profile from './pages/Profile';
+import Home from './pages/Home';
+import PropertyList from './components/property/PropertyList';
+import PropertyDetail from './pages/PropertyDetail';
+import PropertyForm from './components/property/PropertyForm';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+import AgentDashboard from './pages/AgentDashboard';
+import MyProperties from './pages/MyProperties';
+import Leads from './pages/Leads';
+import Analytics from './pages/Analytics';
+import Messages from './pages/Messages';
+import AdminDashboard from './pages/AdminDashboard';
+import AdminUsers from './pages/AdminUsers';
+import AdminProperties from './pages/AdminProperties';
+import AdminReviews from './pages/AdminReviews';
+import AdminAnalytics from './pages/AdminAnalytics';
+import AdminReports from './pages/AdminReports';
+import AdminSettings from './pages/AdminSettings';
+import FeaturedListing from './pages/FeaturedListing';
+import Subscription from './pages/Subscription';
+import PaymentHistory from './pages/PaymentHistory';
+import './App.css';
+
+const queryClient = new QueryClient();
+
+function App() {
+  const { checkAuth, isAuthenticated } = useAuthStore();
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={isAuthenticated ? <Navigate to="/" /> : <LoginForm />} />
+          <Route
+            path="/register"
+            element={isAuthenticated ? <Navigate to="/" /> : <RegisterForm />}
+          />
+          <Route path="/forgot-password" element={<ForgotPasswordForm />} />
+          <Route path="/reset-password" element={<ResetPasswordForm />} />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/messages"
+            element={
+              <ProtectedRoute>
+                <Messages />
+              </ProtectedRoute>
+            }
+          />
+          
+          {/* Property Routes */}
+          <Route path="/properties" element={<PropertyList />} />
+          <Route path="/properties/:id" element={<PropertyDetail />} />
+          <Route
+            path="/properties/new"
+            element={
+              <ProtectedRoute>
+                <PropertyForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/properties/:id/edit"
+            element={
+              <ProtectedRoute>
+                <PropertyForm />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Agent Routes */}
+          <Route
+            path="/agent/dashboard"
+            element={
+              <ProtectedRoute>
+                <AgentDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/agent/properties"
+            element={
+              <ProtectedRoute>
+                <MyProperties />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/agent/leads"
+            element={
+              <ProtectedRoute>
+                <Leads />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/agent/leads/:id"
+            element={
+              <ProtectedRoute>
+                <Leads />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/agent/analytics"
+            element={
+              <ProtectedRoute>
+                <Analytics />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Admin Routes */}
+          <Route
+            path="/admin/dashboard"
+            element={
+              <ProtectedRoute>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <ProtectedRoute>
+                <AdminUsers />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/properties"
+            element={
+              <ProtectedRoute>
+                <AdminProperties />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/reviews"
+            element={
+              <ProtectedRoute>
+                <AdminReviews />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/analytics"
+            element={
+              <ProtectedRoute>
+                <AdminAnalytics />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/reports"
+            element={
+              <ProtectedRoute>
+                <AdminReports />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/settings"
+            element={
+              <ProtectedRoute>
+                <AdminSettings />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Payment Routes */}
+          <Route
+            path="/feature-listing"
+            element={
+              <ProtectedRoute>
+                <FeaturedListing />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/subscription"
+            element={
+              <ProtectedRoute>
+                <Subscription />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/payments/history"
+            element={
+              <ProtectedRoute>
+                <PaymentHistory />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </Router>
+    </QueryClientProvider>
+  );
+}
+
+export default App;
