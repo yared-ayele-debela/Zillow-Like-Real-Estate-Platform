@@ -10,6 +10,7 @@ import Profile from './pages/Profile';
 import Home from './pages/Home';
 import PropertyList from './components/property/PropertyList';
 import PropertyDetail from './pages/PropertyDetail';
+import AgentDetail from './pages/AgentDetail';
 import PropertyForm from './components/property/PropertyForm';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import AgentDashboard from './pages/AgentDashboard';
@@ -70,6 +71,7 @@ function App() {
           {/* Property Routes */}
           <Route path="/properties" element={<PropertyList />} />
           <Route path="/properties/:id" element={<PropertyDetail />} />
+          <Route path="/agents/:id" element={<AgentDetail />} />
           <Route
             path="/properties/new"
             element={
