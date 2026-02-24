@@ -124,6 +124,14 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Get the user's in-app notifications.
+     */
+    public function appNotifications()
+    {
+        return $this->hasMany(Notification::class);
+    }
+
+    /**
      * Check if user is an agent.
      */
     public function isAgent(): bool
