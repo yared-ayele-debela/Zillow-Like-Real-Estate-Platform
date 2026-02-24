@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\SearchController;
 use App\Http\Controllers\Api\FavoriteController;
 use App\Http\Controllers\Api\SavedSearchController;
 use App\Http\Controllers\Api\ReviewController;
+use App\Http\Controllers\Api\AgentController;
 use App\Http\Controllers\Api\AgentDashboardController;
 use App\Http\Controllers\Api\LeadController;
 use App\Http\Controllers\Api\MessageController;
@@ -35,6 +36,7 @@ Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 // Public property routes
 Route::get('/properties', [PropertyController::class, 'index']);
 Route::get('/properties/{id}', [PropertyController::class, 'show']);
+Route::get('/agents/{id}', [AgentController::class, 'show']);
 
 // Search routes
 Route::get('/search', [SearchController::class, 'search']);
@@ -162,6 +164,18 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::get('/admin/reviews/pending', [AdminController::class, 'pendingReviews']);
     Route::post('/admin/reviews/{id}/approve', [AdminController::class, 'approveReview']);
     Route::post('/admin/reviews/{id}/reject', [AdminController::class, 'rejectReview']);
+
+    // Location Management
+    Route::get('/admin/locations', [AdminController::class, 'locations']);
+    Route::post('/admin/locations', [AdminController::class, 'storeLocation']);
+    Route::put('/admin/locations/{id}', [AdminController::class, 'updateLocation']);
+    Route::delete('/admin/locations/{id}', [AdminController::class, 'deleteLocation']);
+    Route::post('/admin/locations/sync', [AdminController::class, 'syncLocationsFromProperties']);
+
+    // Site & Email Settings
+    Route::get('/admin/settings', [AdminController::class, 'settings']);
+    Route::put('/admin/settings/site', [AdminController::class, 'updateSiteSettings']);
+    Route::put('/admin/settings/email', [AdminController::class, 'updateEmailSettings']);
 
     // Payment config management
     Route::get('/admin/payment-config/plans', [PaymentConfigController::class, 'adminPlans']);
