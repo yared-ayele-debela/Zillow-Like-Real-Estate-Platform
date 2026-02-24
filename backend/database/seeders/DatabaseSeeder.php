@@ -14,9 +14,18 @@ class DatabaseSeeder extends Seeder
         $this->call([
             AmenitySeeder::class,
             UserSeeder::class,
+            SubscriptionPlanSeeder::class,
+            FeaturedListingPackageSeeder::class,
             PropertySeeder::class,
             LocationSeeder::class,
             ReviewSeeder::class,
+            FavoriteSeeder::class,
+            SavedSearchSeeder::class,
+            MessageSeeder::class,
+            SubscriptionSeeder::class,
+            PaymentSeeder::class,
+            AppSettingSeeder::class,
+            NotificationSeeder::class,
         ]);
     }
 }

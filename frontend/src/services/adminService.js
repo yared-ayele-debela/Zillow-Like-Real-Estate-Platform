@@ -106,6 +106,64 @@ const adminService = {
     const response = await api.put('/admin/settings/email', payload);
     return response.data;
   },
+
+  // Roles & Permissions
+  getRoles: async () => {
+    const response = await api.get('/admin/roles');
+    return response.data;
+  },
+
+  getRole: async (id) => {
+    const response = await api.get(`/admin/roles/${id}`);
+    return response.data;
+  },
+
+  createRole: async (payload) => {
+    const response = await api.post('/admin/roles', payload);
+    return response.data;
+  },
+
+  updateRole: async (id, payload) => {
+    const response = await api.put(`/admin/roles/${id}`, payload);
+    return response.data;
+  },
+
+  deleteRole: async (id) => {
+    const response = await api.delete(`/admin/roles/${id}`);
+    return response.data;
+  },
+
+  syncRolePermissions: async (id, permissionIds) => {
+    const response = await api.put(`/admin/roles/${id}/permissions`, {
+      permission_ids: permissionIds,
+    });
+    return response.data;
+  },
+
+  getPermissions: async () => {
+    const response = await api.get('/admin/permissions');
+    return response.data;
+  },
+
+  getPermission: async (id) => {
+    const response = await api.get(`/admin/permissions/${id}`);
+    return response.data;
+  },
+
+  createPermission: async (payload) => {
+    const response = await api.post('/admin/permissions', payload);
+    return response.data;
+  },
+
+  updatePermission: async (id, payload) => {
+    const response = await api.put(`/admin/permissions/${id}`, payload);
+    return response.data;
+  },
+
+  deletePermission: async (id) => {
+    const response = await api.delete(`/admin/permissions/${id}`);
+    return response.data;
+  },
 };
 
 export default adminService;

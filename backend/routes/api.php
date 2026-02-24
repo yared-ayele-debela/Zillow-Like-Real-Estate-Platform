@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\PaymentConfigController;
+use App\Http\Controllers\Api\RolePermissionController;
 use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Controllers\Api\StripeWebhookController;
 
@@ -198,4 +199,18 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::post('/admin/payment-config/featured-packages', [PaymentConfigController::class, 'storeFeaturedPackage']);
     Route::put('/admin/payment-config/featured-packages/{id}', [PaymentConfigController::class, 'updateFeaturedPackage']);
     Route::delete('/admin/payment-config/featured-packages/{id}', [PaymentConfigController::class, 'deleteFeaturedPackage']);
+
+    // Roles & Permissions Management
+    Route::get('/admin/roles', [RolePermissionController::class, 'roles']);
+    Route::post('/admin/roles', [RolePermissionController::class, 'storeRole']);
+    Route::get('/admin/roles/{id}', [RolePermissionController::class, 'showRole']);
+    Route::put('/admin/roles/{id}', [RolePermissionController::class, 'updateRole']);
+    Route::delete('/admin/roles/{id}', [RolePermissionController::class, 'deleteRole']);
+    Route::put('/admin/roles/{id}/permissions', [RolePermissionController::class, 'syncRolePermissions']);
+
+    Route::get('/admin/permissions', [RolePermissionController::class, 'permissions']);
+    Route::post('/admin/permissions', [RolePermissionController::class, 'storePermission']);
+    Route::get('/admin/permissions/{id}', [RolePermissionController::class, 'showPermission']);
+    Route::put('/admin/permissions/{id}', [RolePermissionController::class, 'updatePermission']);
+    Route::delete('/admin/permissions/{id}', [RolePermissionController::class, 'deletePermission']);
 });

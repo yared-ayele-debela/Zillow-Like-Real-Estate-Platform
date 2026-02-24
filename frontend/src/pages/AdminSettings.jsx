@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { CogIcon, EnvelopeIcon, CreditCardIcon, MapPinIcon } from '@heroicons/react/24/outline';
+import { CogIcon, EnvelopeIcon, CreditCardIcon, MapPinIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
 import AdminLayout from '../components/admin/AdminLayout';
 import paymentService from '../services/paymentService';
 import adminService from '../services/adminService';
@@ -66,12 +66,34 @@ const AdminSettings = () => {
   const [savingLocation, setSavingLocation] = useState(false);
   const [loadingSettings, setLoadingSettings] = useState(false);
   const [savingSection, setSavingSection] = useState('');
+  const [roles, setRoles] = useState([]);
+  const [permissions, setPermissions] = useState([]);
+  const [loadingRbac, setLoadingRbac] = useState(false);
+  const [savingRole, setSavingRole] = useState(false);
+  const [savingPermission, setSavingPermission] = useState(false);
+  const [editingRoleId, setEditingRoleId] = useState(null);
+  const [editingPermissionId, setEditingPermissionId] = useState(null);
+  const [roleForm, setRoleForm] = useState({
+    name: '',
+    guard_name: 'web',
+    permission_ids: [],
+  });
+  const [permissionForm, setPermissionForm] = useState({
+    name: '',
+    guard_name: 'web',
+  });
 
   useEffect(() => {
     fetchAdminSettings();
     fetchPaymentConfigs();
     fetchLocations();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'rbac' && roles.length === 0 && permissions.length === 0) {
+      fetchRbacData();
+    }
+  }, [activeTab, roles.length, permissions.length]);
 
   const fetchAdminSettings = async () => {
     try {
@@ -282,11 +304,151 @@ const AdminSettings = () => {
     }
   };
 
+  const fetchRbacData = async () => {
+    try {
+      setLoadingRbac(true);
+      const [rolesData, permissionsData] = await Promise.all([
+        adminService.getRoles(),
+        adminService.getPermissions(),
+      ]);
+      setRoles(rolesData || []);
+      setPermissions(permissionsData || []);
+    } catch (error) {
+      alert(error.response?.data?.message || 'Failed to load roles and permissions');
+    } finally {
+      setLoadingRbac(false);
+    }
+  };
+
+  const resetRoleForm = () => {
+    setEditingRoleId(null);
+    setRoleForm({
+      name: '',
+      guard_name: 'web',
+      permission_ids: [],
+    });
+  };
+
+  const resetPermissionForm = () => {
+    setEditingPermissionId(null);
+    setPermissionForm({
+      name: '',
+      guard_name: 'web',
+    });
+  };
+
+  const saveRole = async () => {
+    if (!roleForm.name.trim()) {
+      alert('Role name is required');
+      return;
+    }
+
+    try {
+      setSavingRole(true);
+      const payload = {
+        name: roleForm.name.trim(),
+        guard_name: roleForm.guard_name || 'web',
+        permissions: roleForm.permission_ids,
+      };
+
+      if (editingRoleId) {
+        await adminService.updateRole(editingRoleId, payload);
+      } else {
+        await adminService.createRole(payload);
+      }
+
+      resetRoleForm();
+      fetchRbacData();
+    } catch (error) {
+      const message = error.response?.data?.message || error.response?.data?.errors?.name?.[0] || 'Failed to save role';
+      alert(message);
+    } finally {
+      setSavingRole(false);
+    }
+  };
+
+  const editRole = (role) => {
+    setEditingRoleId(role.id);
+    setRoleForm({
+      name: role.name || '',
+      guard_name: role.guard_name || 'web',
+      permission_ids: (role.permissions || []).map((p) => p.id),
+    });
+  };
+
+  const deleteRole = async (roleId) => {
+    if (!window.confirm('Delete this role?')) return;
+    try {
+      await adminService.deleteRole(roleId);
+      fetchRbacData();
+    } catch (error) {
+      alert(error.response?.data?.message || 'Failed to delete role');
+    }
+  };
+
+  const toggleRolePermission = (permissionId) => {
+    setRoleForm((prev) => ({
+      ...prev,
+      permission_ids: prev.permission_ids.includes(permissionId)
+        ? prev.permission_ids.filter((id) => id !== permissionId)
+        : [...prev.permission_ids, permissionId],
+    }));
+  };
+
+  const savePermission = async () => {
+    if (!permissionForm.name.trim()) {
+      alert('Permission name is required');
+      return;
+    }
+
+    try {
+      setSavingPermission(true);
+      const payload = {
+        name: permissionForm.name.trim(),
+        guard_name: permissionForm.guard_name || 'web',
+      };
+
+      if (editingPermissionId) {
+        await adminService.updatePermission(editingPermissionId, payload);
+      } else {
+        await adminService.createPermission(payload);
+      }
+
+      resetPermissionForm();
+      fetchRbacData();
+    } catch (error) {
+      const message =
+        error.response?.data?.message || error.response?.data?.errors?.name?.[0] || 'Failed to save permission';
+      alert(message);
+    } finally {
+      setSavingPermission(false);
+    }
+  };
+
+  const editPermission = (permission) => {
+    setEditingPermissionId(permission.id);
+    setPermissionForm({
+      name: permission.name || '',
+      guard_name: permission.guard_name || 'web',
+    });
+  };
+
+  const deletePermission = async (permissionId) => {
+    if (!window.confirm('Delete this permission?')) return;
+    try {
+      await adminService.deletePermission(permissionId);
+      fetchRbacData();
+    } catch (error) {
+      alert(error.response?.data?.message || 'Failed to delete permission');
+    }
+  };
+
   const tabs = [
     { id: 'site', name: 'Site Settings', icon: CogIcon },
     { id: 'email', name: 'Email Settings', icon: EnvelopeIcon },
     { id: 'payment', name: 'Payment Settings', icon: CreditCardIcon },
     { id: 'locations', name: 'Location Management', icon: MapPinIcon },
+    { id: 'rbac', name: 'Roles & Permissions', icon: ShieldCheckIcon },
   ];
 
   return (
@@ -322,6 +484,9 @@ const AdminSettings = () => {
           <div className="p-6">
             {loadingSettings && (activeTab === 'site' || activeTab === 'email') && (
               <div className="mb-4 text-sm text-gray-500">Loading settings...</div>
+            )}
+            {loadingRbac && activeTab === 'rbac' && (
+              <div className="mb-4 text-sm text-gray-500">Loading roles and permissions...</div>
             )}
 
             {/* Site Settings */}
@@ -870,6 +1035,194 @@ const AdminSettings = () => {
                       ))}
                     </tbody>
                   </table>
+                </div>
+              </div>
+            )}
+
+            {/* Roles & Permissions */}
+            {activeTab === 'rbac' && (
+              <div className="space-y-8">
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                  <div className="border rounded-lg p-4 bg-gray-50">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                      {editingRoleId ? 'Edit Role' : 'Create Role'}
+                    </h3>
+                    <div className="space-y-3">
+                      <input
+                        type="text"
+                        placeholder="Role name (e.g. manager)"
+                        value={roleForm.name}
+                        onChange={(e) => setRoleForm({ ...roleForm, name: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Guard name (web/api)"
+                        value={roleForm.guard_name}
+                        onChange={(e) => setRoleForm({ ...roleForm, guard_name: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      />
+                    </div>
+
+                    <div className="mt-4">
+                      <p className="text-sm font-medium text-gray-700 mb-2">Assign Permissions</p>
+                      <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-md bg-white p-3 space-y-2">
+                        {permissions.length === 0 && (
+                          <p className="text-sm text-gray-500">No permissions available.</p>
+                        )}
+                        {permissions.map((permission) => (
+                          <label key={permission.id} className="flex items-center gap-2 text-sm text-gray-700">
+                            <input
+                              type="checkbox"
+                              checked={roleForm.permission_ids.includes(permission.id)}
+                              onChange={() => toggleRolePermission(permission.id)}
+                            />
+                            {permission.name}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 mt-4">
+                      <button
+                        onClick={saveRole}
+                        disabled={savingRole}
+                        className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
+                      >
+                        {savingRole ? 'Saving...' : editingRoleId ? 'Update Role' : 'Create Role'}
+                      </button>
+                      {editingRoleId && (
+                        <button
+                          onClick={resetRoleForm}
+                          className="px-4 py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="border rounded-lg p-4 bg-gray-50">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                      {editingPermissionId ? 'Edit Permission' : 'Create Permission'}
+                    </h3>
+                    <div className="space-y-3">
+                      <input
+                        type="text"
+                        placeholder="Permission name (e.g. manage users)"
+                        value={permissionForm.name}
+                        onChange={(e) => setPermissionForm({ ...permissionForm, name: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Guard name (web/api)"
+                        value={permissionForm.guard_name}
+                        onChange={(e) => setPermissionForm({ ...permissionForm, guard_name: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      />
+                    </div>
+                    <div className="flex gap-2 mt-4">
+                      <button
+                        onClick={savePermission}
+                        disabled={savingPermission}
+                        className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
+                      >
+                        {savingPermission ? 'Saving...' : editingPermissionId ? 'Update Permission' : 'Create Permission'}
+                      </button>
+                      {editingPermissionId && (
+                        <button
+                          onClick={resetPermissionForm}
+                          className="px-4 py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                  <div className="border rounded-lg overflow-hidden">
+                    <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
+                      <h3 className="font-semibold text-gray-900">Roles</h3>
+                    </div>
+                    <div className="divide-y divide-gray-200">
+                      {roles.length === 0 && (
+                        <div className="px-4 py-6 text-sm text-gray-500">No roles found.</div>
+                      )}
+                      {roles.map((role) => (
+                        <div key={role.id} className="px-4 py-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="text-sm font-semibold text-gray-900">{role.name}</p>
+                              <p className="text-xs text-gray-500">Guard: {role.guard_name}</p>
+                              <div className="flex flex-wrap gap-1 mt-2">
+                                {(role.permissions || []).map((permission) => (
+                                  <span
+                                    key={permission.id}
+                                    className="px-2 py-0.5 rounded-full text-xs bg-indigo-50 text-indigo-700"
+                                  >
+                                    {permission.name}
+                                  </span>
+                                ))}
+                                {(role.permissions || []).length === 0 && (
+                                  <span className="text-xs text-gray-400">No permissions assigned</span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => editRole(role)}
+                                className="px-2 py-1 text-xs bg-indigo-50 text-indigo-700 rounded hover:bg-indigo-100"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => deleteRole(role.id)}
+                                className="px-2 py-1 text-xs bg-red-50 text-red-700 rounded hover:bg-red-100"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="border rounded-lg overflow-hidden">
+                    <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
+                      <h3 className="font-semibold text-gray-900">Permissions</h3>
+                    </div>
+                    <div className="divide-y divide-gray-200">
+                      {permissions.length === 0 && (
+                        <div className="px-4 py-6 text-sm text-gray-500">No permissions found.</div>
+                      )}
+                      {permissions.map((permission) => (
+                        <div key={permission.id} className="px-4 py-3 flex items-center justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{permission.name}</p>
+                            <p className="text-xs text-gray-500">Guard: {permission.guard_name}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => editPermission(permission)}
+                              className="px-2 py-1 text-xs bg-indigo-50 text-indigo-700 rounded hover:bg-indigo-100"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => deletePermission(permission.id)}
+                              className="px-2 py-1 text-xs bg-red-50 text-red-700 rounded hover:bg-red-100"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
