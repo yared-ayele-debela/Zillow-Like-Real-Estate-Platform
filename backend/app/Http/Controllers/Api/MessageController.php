@@ -8,6 +8,7 @@ use App\Models\Property;
 use App\Models\User;
 use App\Notifications\NewMessageNotification;
 use App\Notifications\TourRequestNotification;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Notification;
@@ -15,6 +16,10 @@ use Illuminate\Support\Facades\Log;
 
 class MessageController extends Controller
 {
+    public function __construct(protected NotificationService $notificationService)
+    {
+    }
+
     /**
      * Store a new message.
      */
@@ -51,6 +56,18 @@ class MessageController extends Controller
         // Send email notification
         try {
             $receiver->notify(new NewMessageNotification($message));
+            $this->notificationService->sendInApp(
+                $receiver,
+                'new_message',
+                $message->subject ?? 'New Message',
+                $message->message,
+                [
+                    'message_id' => $message->id,
+                    'sender_id' => $message->sender_id,
+                    'sender_name' => $message->sender?->name,
+                ],
+                $message->property_id
+            );
         } catch (\Exception $e) {
             Log::error('Failed to send message notification', [
                 'message_id' => $message->id,
@@ -220,6 +237,18 @@ class MessageController extends Controller
         try {
             $receiver = User::findOrFail($receiverId);
             $receiver->notify(new NewMessageNotification($reply));
+            $this->notificationService->sendInApp(
+                $receiver,
+                'new_message',
+                $reply->subject ?? 'New Message',
+                $reply->message,
+                [
+                    'message_id' => $reply->id,
+                    'sender_id' => $reply->sender_id,
+                    'sender_name' => $reply->sender?->name,
+                ],
+                $reply->property_id
+            );
         } catch (\Exception $e) {
             Log::error('Failed to send reply notification', [
                 'message_id' => $reply->id,
@@ -279,6 +308,19 @@ class MessageController extends Controller
         // Send email notification
         try {
             $receiver->notify(new TourRequestNotification($message, $property));
+            $this->notificationService->sendInApp(
+                $receiver,
+                'tour_request',
+                "Tour Request: {$property->title}",
+                $message->message,
+                [
+                    'message_id' => $message->id,
+                    'sender_id' => $message->sender_id,
+                    'sender_name' => $message->sender?->name,
+                    'tour_request_data' => $message->tour_request_data,
+                ],
+                $property->id
+            );
         } catch (\Exception $e) {
             Log::error('Failed to send tour request notification', [
                 'message_id' => $message->id,
