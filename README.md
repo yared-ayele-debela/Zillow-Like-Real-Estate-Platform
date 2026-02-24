@@ -4,6 +4,15 @@ Full-stack real estate platform with a Laravel API backend and a React frontend.
 It supports authentication, property listings, search and map features, favorites,
 messaging, reviews, role-based dashboards, and Stripe-powered payments.
 
+## Recent Additions
+
+- Admin Location Management with persistent CRUD and seeded Italian locations.
+- Admin Site and Email Settings with database persistence (`app_settings` table).
+- Agent dashboard shared layout for agent-specific pages.
+- Real-time notifications (Laravel broadcasting + Echo + Pusher/Reverb-compatible config).
+- Admin Roles and Permissions management (Spatie Permission) with full backend CRUD and React UI.
+- Comprehensive sample seeders for required business tables.
+
 ## Project Structure
 
 - `backend` - Laravel 12 API, authentication (Sanctum), roles/permissions, Stripe integration
@@ -33,6 +42,7 @@ composer install
 cp .env.example .env
 php artisan key:generate
 php artisan migrate
+php artisan db:seed
 php artisan storage:link
 npm install
 ```
@@ -48,6 +58,32 @@ composer run dev
 ```
 
 Default API URL: `http://localhost:8000`
+
+### Seed Sample Data (All Required Tables)
+
+To rebuild and seed everything in one command:
+
+```bash
+cd /home/yared/Desktop/Projects/Zillow/backend
+php artisan migrate:fresh --seed --force
+```
+
+Seeders now include:
+
+- Users (admin, agents, buyers, guest)
+- Amenities
+- Properties and property images
+- Locations
+- Reviews
+- Favorites
+- Saved searches
+- Messages
+- Subscription plans
+- Featured listing packages
+- Subscriptions
+- Payments
+- App settings (site/email)
+- Notifications
 
 ### 2) Frontend Setup
 
@@ -85,6 +121,15 @@ Set these in `backend/.env` as needed:
 - `STRIPE_KEY`
 - `STRIPE_SECRET`
 - `STRIPE_WEBHOOK_SECRET`
+- Broadcasting (for real-time notifications):
+  - `BROADCAST_DRIVER`
+  - `PUSHER_APP_ID`
+  - `PUSHER_APP_KEY`
+  - `PUSHER_APP_SECRET`
+  - `PUSHER_APP_CLUSTER`
+  - `PUSHER_HOST` (optional)
+  - `PUSHER_PORT` (optional)
+  - `PUSHER_SCHEME` (optional)
 
 ## Common Commands
 
@@ -107,6 +152,11 @@ npm run build
 ## API and Docs
 
 - API routes are defined in `backend/routes/api.php`
+- Admin settings and management routes include:
+  - `/api/admin/settings/*`
+  - `/api/admin/locations/*`
+  - `/api/admin/roles/*`
+  - `/api/admin/permissions/*`
 - Postman collection and environment:
   - `documents/postman_collection.json`
   - `documents/postman_environment.json`
@@ -118,3 +168,4 @@ npm run build
 - The backend and frontend currently contain default framework READMEs in
   `backend/README.md` and `frontend/README.md`.
 - This root README is the primary entry point for running the full project.
+- Roles & Permissions UI is available in the Admin Dashboard under `Settings > Roles & Permissions`.
