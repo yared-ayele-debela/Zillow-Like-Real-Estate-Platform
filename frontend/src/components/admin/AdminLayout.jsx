@@ -58,18 +58,18 @@ const AdminLayout = ({ children }) => {
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } lg:translate-x-0 ${
           mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        } w-64 bg-gray-900 text-white`}
+        } w-64 bg-white border-r border-gray-200 text-gray-900`}
       >
         <div className="flex flex-col h-full">
           {/* Logo/Brand */}
-          <div className="flex items-center justify-between h-16 px-6 border-b border-gray-800">
+          <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
             <Link to="/admin/dashboard" className="flex items-center gap-2">
               <BuildingOfficeIcon className="h-8 w-8 text-indigo-400" />
               <span className="text-xl font-bold">Admin Panel</span>
             </Link>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="lg:hidden text-gray-400 hover:text-white"
+              className="lg:hidden text-gray-500 hover:text-gray-700"
             >
               <XMarkIcon className="h-6 w-6" />
             </button>
@@ -87,8 +87,8 @@ const AdminLayout = ({ children }) => {
                   onClick={() => setMobileMenuOpen(false)}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                     active
-                      ? 'bg-indigo-600 text-white'
-                      : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                      ? 'bg-indigo-50 text-indigo-700'
+                      : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                   }`}
                 >
                   <Icon className="h-5 w-5" />
@@ -99,17 +99,17 @@ const AdminLayout = ({ children }) => {
           </nav>
 
           {/* User Info */}
-          <div className="p-4 border-t border-gray-800">
+          <div className="p-4 border-t border-gray-200">
             <div className="flex items-center gap-3 mb-3">
               <UserCircleIcon className="h-10 w-10 text-gray-400" />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">{user?.name || 'Admin'}</p>
-                <p className="text-xs text-gray-400 truncate">{user?.email || ''}</p>
+                <p className="text-sm font-medium text-gray-900 truncate">{user?.name || 'Admin'}</p>
+                <p className="text-xs text-gray-500 truncate">{user?.email || ''}</p>
               </div>
             </div>
             <Link
               to="/"
-              className="block w-full text-center px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+              className="block w-full text-center px-4 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
             >
               View Site
             </Link>
@@ -146,7 +146,7 @@ const AdminLayout = ({ children }) => {
               {/* Notifications */}
               <button className="relative p-2 text-gray-500 hover:text-gray-700">
                 <BellIcon className="h-6 w-6" />
-                <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-500"></span>
+                <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-indigo-600"></span>
               </button>
 
               {/* User menu */}
@@ -155,7 +155,7 @@ const AdminLayout = ({ children }) => {
                   <UserCircleIcon className="h-8 w-8 text-gray-400" />
                   <span className="hidden sm:block text-sm font-medium">{user?.name || 'Admin'}</span>
                 </button>
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                   <Link
                     to="/profile"
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
