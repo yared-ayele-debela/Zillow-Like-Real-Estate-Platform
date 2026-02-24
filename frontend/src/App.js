@@ -28,6 +28,7 @@ import AdminSettings from './pages/AdminSettings';
 import FeaturedListing from './pages/FeaturedListing';
 import Subscription from './pages/Subscription';
 import PaymentHistory from './pages/PaymentHistory';
+import Notifications from './pages/Notifications';
 import './App.css';
 
 const queryClient = new QueryClient();
@@ -211,6 +212,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <PaymentHistory />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/notifications"
+            element={
+              <ProtectedRoute>
+                <Notifications />
               </ProtectedRoute>
             }
           />

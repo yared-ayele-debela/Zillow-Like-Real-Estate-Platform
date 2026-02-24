@@ -10,11 +10,11 @@ import {
   Cog6ToothIcon,
   Bars3Icon,
   XMarkIcon,
-  BellIcon,
   UserCircleIcon,
   ArrowRightOnRectangleIcon,
 } from '@heroicons/react/24/outline';
 import useAuthStore from '../../store/authStore';
+import NotificationBell from '../common/NotificationBell';
 
 const AdminLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -144,10 +144,7 @@ const AdminLayout = ({ children }) => {
             {/* Right side - User actions */}
             <div className="flex items-center gap-4">
               {/* Notifications */}
-              <button className="relative p-2 text-gray-500 hover:text-gray-700">
-                <BellIcon className="h-6 w-6" />
-                <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-indigo-600"></span>
-              </button>
+              <NotificationBell />
 
               {/* User menu */}
               <div className="relative group">

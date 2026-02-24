@@ -12,6 +12,7 @@ import {
   ArrowRightOnRectangleIcon,
 } from '@heroicons/react/24/outline';
 import useAuthStore from '../../store/authStore';
+import NotificationBell from '../common/NotificationBell';
 
 const AgentLayout = ({ children }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -111,9 +112,12 @@ const AgentLayout = ({ children }) => {
             </button>
             <h1 className="text-lg font-semibold text-gray-900">{currentTitle}</h1>
           </div>
-          <Link to="/" className="text-sm text-indigo-600 hover:text-indigo-700">
-            View Site
-          </Link>
+          <div className="flex items-center gap-3">
+            <NotificationBell />
+            <Link to="/" className="text-sm text-indigo-600 hover:text-indigo-700">
+              View Site
+            </Link>
+          </div>
         </header>
 
         <main>{children}</main>
