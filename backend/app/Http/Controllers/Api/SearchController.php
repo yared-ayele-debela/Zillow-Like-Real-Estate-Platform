@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Location;
+use App\Models\Property;
+use App\Models\Amenity;
 use App\Services\PropertySearchService;
 use Illuminate\Http\Request;
 
@@ -59,7 +62,7 @@ class SearchController extends Controller
         }
 
         $perPage = min($request->get('per_page', 15), 100);
-        
+
         $results = $this->searchService->search($filters, $perPage);
 
         return response()->json($results);
@@ -115,32 +118,55 @@ class SearchController extends Controller
     public function suggestions(Request $request)
     {
         $query = $request->get('q', '');
-        
+
         if (strlen($query) < 2) {
             return response()->json(['suggestions' => []]);
         }
 
         $suggestions = [];
 
-        // City suggestions
-        $cities = \App\Models\Property::where('city', 'like', "%{$query}%")
-            ->distinct()
+        // City suggestions from managed locations first.
+        $cities = Location::where('is_active', true)
+            ->where('city', 'like', "%{$query}%")
+            ->orderBy('city')
             ->pluck('city')
             ->take(5)
             ->map(function ($city) {
                 return ['type' => 'city', 'value' => $city, 'label' => $city];
             });
 
+        if ($cities->isEmpty()) {
+            $cities = Property::where('city', 'like', "%{$query}%")
+                ->distinct()
+                ->pluck('city')
+                ->take(5)
+                ->map(function ($city) {
+                    return ['type' => 'city', 'value' => $city, 'label' => $city];
+                });
+        }
+
         $suggestions = array_merge($suggestions, $cities->toArray());
 
-        // State suggestions
-        $states = \App\Models\Property::where('state', 'like', "%{$query}%")
-            ->distinct()
+        // State suggestions from managed locations first.
+        $states = Location::where('is_active', true)
+            ->where('state', 'like', "%{$query}%")
+            ->orderBy('state')
             ->pluck('state')
+            ->unique()
             ->take(3)
             ->map(function ($state) {
                 return ['type' => 'state', 'value' => $state, 'label' => $state];
             });
+
+        if ($states->isEmpty()) {
+            $states = Property::where('state', 'like', "%{$query}%")
+                ->distinct()
+                ->pluck('state')
+                ->take(3)
+                ->map(function ($state) {
+                    return ['type' => 'state', 'value' => $state, 'label' => $state];
+                });
+        }
 
         $suggestions = array_merge($suggestions, $states->toArray());
 
@@ -166,12 +192,27 @@ class SearchController extends Controller
      */
     public function filterOptions()
     {
+        $managedStates = Location::where('is_active', true)
+            ->orderBy('state')
+            ->pluck('state')
+            ->unique()
+            ->values();
+        $managedCities = Location::where('is_active', true)
+            ->orderBy('city')
+            ->pluck('city')
+            ->unique()
+            ->values();
+
         $options = [
             'property_types' => ['house', 'apartment', 'condo', 'land', 'commercial'],
             'statuses' => ['for_sale', 'for_rent', 'sold', 'pending'],
-            'states' => \App\Models\Property::distinct()->pluck('state')->sort()->values(),
-            'cities' => \App\Models\Property::distinct()->pluck('city')->sort()->values()->take(50),
-            'amenities' => \App\Models\Amenity::select('id', 'name', 'category')->get()->groupBy('category'),
+            'states' => $managedStates->isNotEmpty()
+                ? $managedStates
+                : Property::distinct()->pluck('state')->sort()->values(),
+            'cities' => $managedCities->isNotEmpty()
+                ? $managedCities->take(50)
+                : Property::distinct()->pluck('city')->sort()->values()->take(50),
+            'amenities' => Amenity::select('id', 'name', 'category')->get()->groupBy('category'),
             'bedroom_options' => [1, 2, 3, 4, 5, 6],
             'bathroom_options' => [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5],
         ];
