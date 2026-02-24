@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
             AmenitySeeder::class,
             UserSeeder::class,
             PropertySeeder::class,
+            LocationSeeder::class,
             ReviewSeeder::class,
         ]);
     }
