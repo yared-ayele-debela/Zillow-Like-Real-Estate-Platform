@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Broadcast;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\EmailVerificationController;
@@ -16,6 +17,7 @@ use App\Http\Controllers\Api\AgentDashboardController;
 use App\Http\Controllers\Api\LeadController;
 use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\AdminController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\PaymentConfigController;
 use App\Http\Controllers\Api\SubscriptionController;
@@ -61,6 +63,8 @@ Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 've
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
+    Broadcast::routes(['middleware' => ['auth:sanctum']]);
+
     // Authentication
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'getUser']);
@@ -104,6 +108,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/messages/{id}/reply', [MessageController::class, 'reply']);
     Route::post('/messages/{id}/read', [MessageController::class, 'markAsRead']);
     Route::post('/messages/tour-request', [MessageController::class, 'requestTour']);
+
+    // Notifications
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+    Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
 
     // Payments
     Route::post('/payments', [PaymentController::class, 'createPayment']);
