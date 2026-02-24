@@ -7,6 +7,8 @@ use App\Models\User;
 use App\Models\Property;
 use App\Models\Review;
 use App\Models\Message;
+use App\Models\Location;
+use App\Models\AppSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -411,6 +413,283 @@ class AdminController extends Controller
 
         return response()->json([
             'message' => 'Review rejected and deleted',
+        ]);
+    }
+
+    /**
+     * Get location management data.
+     */
+    public function locations(Request $request)
+    {
+        $onlyActive = $request->boolean('active_only', false);
+
+        $query = Location::query()
+            ->orderBy('state')
+            ->orderBy('sort_order')
+            ->orderBy('city');
+
+        if ($onlyActive) {
+            $query->where('is_active', true);
+        }
+
+        $locations = $query->get();
+
+        return response()->json([
+            'locations' => $locations,
+            'states' => $locations->pluck('state')->unique()->values(),
+            'cities' => $locations->pluck('city')->unique()->values(),
+            'grouped' => $locations->groupBy('state')->map(fn($items) => $items->values()),
+        ]);
+    }
+
+    /**
+     * Create a managed location.
+     */
+    public function storeLocation(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'state' => 'required|string|max:120',
+            'city' => 'required|string|max:120',
+            'is_active' => 'sometimes|boolean',
+            'sort_order' => 'sometimes|integer|min:0',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $state = strtoupper(trim($request->state));
+        $city = trim($request->city);
+
+        $exists = Location::where('state', $state)->where('city', $city)->exists();
+        if ($exists) {
+            return response()->json([
+                'message' => 'Location already exists.',
+            ], 422);
+        }
+
+        $location = Location::create([
+            'state' => $state,
+            'city' => $city,
+            'is_active' => $request->boolean('is_active', true),
+            'sort_order' => $request->get('sort_order', 0),
+        ]);
+
+        return response()->json([
+            'message' => 'Location created successfully',
+            'location' => $location,
+        ], 201);
+    }
+
+    /**
+     * Update a managed location.
+     */
+    public function updateLocation(Request $request, string $id)
+    {
+        $location = Location::findOrFail($id);
+
+        $validator = Validator::make($request->all(), [
+            'state' => 'sometimes|string|max:120',
+            'city' => 'sometimes|string|max:120',
+            'is_active' => 'sometimes|boolean',
+            'sort_order' => 'sometimes|integer|min:0',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $state = $request->has('state') ? strtoupper(trim($request->state)) : $location->state;
+        $city = $request->has('city') ? trim($request->city) : $location->city;
+
+        $exists = Location::where('state', $state)
+            ->where('city', $city)
+            ->where('id', '!=', $location->id)
+            ->exists();
+        if ($exists) {
+            return response()->json([
+                'message' => 'Location already exists.',
+            ], 422);
+        }
+
+        $data = $request->only(['is_active', 'sort_order']);
+        $data['state'] = $state;
+        $data['city'] = $city;
+
+        $location->update($data);
+
+        return response()->json([
+            'message' => 'Location updated successfully',
+            'location' => $location->fresh(),
+        ]);
+    }
+
+    /**
+     * Delete a managed location.
+     */
+    public function deleteLocation(string $id)
+    {
+        $location = Location::findOrFail($id);
+        $location->delete();
+
+        return response()->json([
+            'message' => 'Location deleted successfully',
+        ]);
+    }
+
+    /**
+     * Sync managed locations from existing properties.
+     */
+    public function syncLocationsFromProperties()
+    {
+        $propertyLocations = Property::query()
+            ->select('state', 'city')
+            ->whereNotNull('state')
+            ->whereNotNull('city')
+            ->distinct()
+            ->orderBy('state')
+            ->orderBy('city')
+            ->get();
+
+        $created = 0;
+        foreach ($propertyLocations as $locationData) {
+            $state = strtoupper(trim((string) $locationData->state));
+            $city = trim((string) $locationData->city);
+
+            if ($state === '' || $city === '') {
+                continue;
+            }
+
+            $location = Location::firstOrCreate(
+                ['state' => $state, 'city' => $city],
+                ['is_active' => true]
+            );
+
+            if ($location->wasRecentlyCreated) {
+                $created++;
+            }
+        }
+
+        return response()->json([
+            'message' => 'Locations synced successfully',
+            'created_count' => $created,
+            'total_locations' => Location::count(),
+        ]);
+    }
+
+    /**
+     * Get site and email settings.
+     */
+    public function settings()
+    {
+        $site = AppSetting::where('key', 'site')->value('value') ?? [];
+        $email = AppSetting::where('key', 'email')->value('value') ?? [];
+
+        return response()->json([
+            'site' => array_merge([
+                'site_name' => 'Zillow Clone',
+                'site_description' => 'Real Estate Platform',
+                'maintenance_mode' => false,
+                'allow_registration' => true,
+                'require_email_verification' => true,
+            ], $site),
+            'email' => array_merge([
+                'mail_driver' => 'smtp',
+                'mail_host' => 'smtp.mailtrap.io',
+                'mail_port' => '2525',
+                'mail_username' => '',
+                'mail_password' => '',
+                'mail_from_address' => 'noreply@example.com',
+                'mail_from_name' => 'Zillow Clone',
+            ], $email),
+        ]);
+    }
+
+    /**
+     * Update site settings.
+     */
+    public function updateSiteSettings(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'site_name' => 'required|string|max:120',
+            'site_description' => 'nullable|string|max:1000',
+            'maintenance_mode' => 'required|boolean',
+            'allow_registration' => 'required|boolean',
+            'require_email_verification' => 'required|boolean',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $value = $request->only([
+            'site_name',
+            'site_description',
+            'maintenance_mode',
+            'allow_registration',
+            'require_email_verification',
+        ]);
+
+        AppSetting::updateOrCreate(
+            ['key' => 'site'],
+            ['value' => $value]
+        );
+
+        return response()->json([
+            'message' => 'Site settings saved successfully',
+            'site' => $value,
+        ]);
+    }
+
+    /**
+     * Update email settings.
+     */
+    public function updateEmailSettings(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'mail_driver' => 'required|string|max:50',
+            'mail_host' => 'required|string|max:255',
+            'mail_port' => 'required|string|max:10',
+            'mail_username' => 'nullable|string|max:255',
+            'mail_password' => 'nullable|string|max:255',
+            'mail_from_address' => 'required|email|max:255',
+            'mail_from_name' => 'required|string|max:120',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $value = $request->only([
+            'mail_driver',
+            'mail_host',
+            'mail_port',
+            'mail_username',
+            'mail_password',
+            'mail_from_address',
+            'mail_from_name',
+        ]);
+
+        AppSetting::updateOrCreate(
+            ['key' => 'email'],
+            ['value' => $value]
+        );
+
+        return response()->json([
+            'message' => 'Email settings saved successfully',
+            'email' => $value,
         ]);
     }
 
