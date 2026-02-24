@@ -1,0 +1,752 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Geoapify Places API Tester</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background: #e8e9eb;
+        color: #121213;
+      }
+
+      .container {
+        max-width: 1250px;
+        margin: 0 auto;
+      }
+
+      h1 {
+        margin: 0 0 10px;
+      }
+
+      p {
+        margin: 0 0 12px;
+        color: #4b5563;
+      }
+
+      .panel {
+        background: #ffffff;
+        border: 1px solid #d1d5db;
+        border-radius: 10px;
+        padding: 14px;
+        margin-bottom: 12px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 10px;
+      }
+
+      label {
+        display: block;
+        font-size: 13px;
+        margin-bottom: 4px;
+        color: #374151;
+      }
+
+      input,
+      select {
+        width: 100%;
+        box-sizing: border-box;
+        border: 1px solid #9ca3af;
+        background: #ffffff;
+        color: #111827;
+        padding: 8px;
+        border-radius: 8px;
+      }
+
+      button {
+        border: 0;
+        border-radius: 8px;
+        padding: 10px 14px;
+        cursor: pointer;
+        background: #2563eb;
+        color: white;
+        font-weight: 600;
+      }
+
+      button:hover {
+        background: #1d4ed8;
+      }
+
+      #map {
+        width: 100%;
+        height: 540px;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid #d1d5db;
+      }
+
+      .two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      .muted {
+        color: #6b7280;
+        font-size: 13px;
+      }
+
+      .places-list {
+        display: grid;
+        gap: 8px;
+        margin-top: 10px;
+        max-height: 360px;
+        overflow: auto;
+      }
+
+      .places-item {
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        padding: 10px;
+        background: #fafafa;
+      }
+
+      .places-item h4 {
+        margin: 0 0 4px;
+        font-size: 14px;
+      }
+
+      .home-marker {
+        font-size: 18px;
+        line-height: 20px;
+        text-align: center;
+        transform: translate(-50%, -50%);
+        filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+      }
+
+      pre {
+        background: #0f172a;
+        border: 1px solid #334155;
+        border-radius: 10px;
+        padding: 12px;
+        white-space: pre-wrap;
+        word-break: break-word;
+        color: #cbd5e1;
+        max-height: 360px;
+        overflow: auto;
+      }
+
+      textarea {
+        width: 100%;
+        box-sizing: border-box;
+        border: 1px solid #9ca3af;
+        background: #ffffff;
+        color: #111827;
+        padding: 8px;
+        border-radius: 8px;
+        min-height: 170px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: 12px;
+      }
+
+      @media (max-width: 900px) {
+        .two-col {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Geoapify Places API Search</h1>
+      <p>
+        Search properties/places with simple filters. Area is selected automatically from map click (city) or current map view.
+      </p>
+      <p class="muted">
+        Tip: click on the map to auto-detect the city boundary and search places for that city.
+      </p>
+
+      <div class="panel">
+        <div class="grid">
+          <div>
+            <label for="apiKeyInput">Geoapify API Key</label>
+            <input id="apiKeyInput" type="text" value="cc7118dc990b4948a202b6eebea7935c" />
+          </div>
+          <div>
+            <label for="categoriesInput">Categories (optional, comma separated)</label>
+            <input id="categoriesInput" type="text" value="" placeholder="Leave empty to use default property categories" />
+          </div>
+          <div>
+            <label for="cityInput">City / District</label>
+            <input id="cityInput" type="text" value="Mestre" placeholder="Mestre" />
+          </div>
+          <div>
+            <label for="cityPlaceIdInput">City/District Place ID (optional)</label>
+            <input id="cityPlaceIdInput" type="text" value="" placeholder="Use place ID directly if you have it" />
+          </div>
+          <div>
+            <label for="nameInput">Place Name Keyword (optional)</label>
+            <input id="nameInput" type="text" value="" placeholder="Starbucks" />
+          </div>
+          <div>
+            <label for="propertyTypeSelect">Property Type</label>
+            <select id="propertyTypeSelect">
+              <option value="">Any</option>
+              <option value="apartment">Apartment</option>
+              <option value="house">House</option>
+              <option value="hotel">Hotel</option>
+              <option value="villa">Villa</option>
+            </select>
+          </div>
+          <div>
+            <label for="limitInput">Limit</label>
+            <input id="limitInput" type="number" min="1" max="50" value="20" />
+          </div>
+        </div>
+        <div style="margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap;">
+          <button id="findCityBtn" type="button">Find City/District</button>
+          <button id="searchBtn" type="button">Search Places</button>
+          <button id="showSampleBtn" type="button">Show Sample Properties</button>
+          <button id="clearBtn" type="button">Clear Results</button>
+        </div>
+      </div>
+
+      <div id="map" class="panel"></div>
+
+      <div class="two-col">
+        <div class="panel">
+          <h3 style="margin-top: 0;">Places Results</h3>
+          <div id="statusText" class="muted">No Places API request yet.</div>
+          <div id="placesList" class="places-list"></div>
+        </div>
+        <div class="panel">
+          <h3 style="margin-top: 0;">Places API Response</h3>
+          <pre id="responseBox">Waiting for Places API call...</pre>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const apiKeyInput = document.getElementById("apiKeyInput");
+      const categoriesInput = document.getElementById("categoriesInput");
+      const cityInput = document.getElementById("cityInput");
+      const cityPlaceIdInput = document.getElementById("cityPlaceIdInput");
+      const nameInput = document.getElementById("nameInput");
+      const propertyTypeSelect = document.getElementById("propertyTypeSelect");
+      const limitInput = document.getElementById("limitInput");
+      const findCityBtn = document.getElementById("findCityBtn");
+      const searchBtn = document.getElementById("searchBtn");
+      const showSampleBtn = document.getElementById("showSampleBtn");
+      const clearBtn = document.getElementById("clearBtn");
+      const statusText = document.getElementById("statusText");
+      const placesList = document.getElementById("placesList");
+      const responseBox = document.getElementById("responseBox");
+
+      const map = L.map("map").setView([45.4930, 12.2450], 12);
+      const markersLayer = L.featureGroup().addTo(map);
+      const cityLayer = L.featureGroup().addTo(map);
+      let clickedPointMarker = null;
+      let selectedCityGeometry = null;
+      let selectedCityName = "";
+      let selectedCityPlaceId = "";
+      const SAMPLE_PROPERTIES = [
+        { title: "Mestre Center Apartment", price: 255000, lat: 45.4931, lon: 12.2426, address: "Mestre Centro, Venice" },
+        { title: "Carpenedo Family House", price: 395000, lat: 45.5071, lon: 12.2570, address: "Carpenedo, Mestre" },
+        { title: "Marghera Modern Flat", price: 229000, lat: 45.4722, lon: 12.2154, address: "Marghera, Venice" },
+        { title: "Favaro Veneto Studio", price: 198000, lat: 45.5068, lon: 12.2941, address: "Favaro Veneto, Venice" },
+        { title: "Zelarino Townhouse", price: 312000, lat: 45.5196, lon: 12.2015, address: "Zelarino, Mestre" },
+        { title: "Chirignago Duplex", price: 287000, lat: 45.4839, lon: 12.2079, address: "Chirignago, Mestre" },
+        { title: "Terraglio Villa", price: 540000, lat: 45.5128, lon: 12.2384, address: "Via Terraglio, Mestre" },
+        { title: "Bissuola Condo", price: 268000, lat: 45.5049, lon: 12.2447, address: "Bissuola, Mestre" },
+        { title: "Piazza Ferretto Flat", price: 341000, lat: 45.4938, lon: 12.2411, address: "Piazza Ferretto, Mestre" },
+        { title: "Mestre Station Loft", price: 276000, lat: 45.4849, lon: 12.2332, address: "Mestre Stazione, Venice" },
+        { title: "Via Piave Renovated Home", price: 304000, lat: 45.4861, lon: 12.2358, address: "Via Piave, Mestre" },
+        { title: "Cipressina Family Apartment", price: 247000, lat: 45.5009, lon: 12.2253, address: "Cipressina, Mestre" },
+        { title: "Campalto Lagoon View", price: 366000, lat: 45.5150, lon: 12.3008, address: "Campalto, Venice" },
+        { title: "Dese Detached House", price: 422000, lat: 45.5465, lon: 12.3198, address: "Dese, Venice" },
+        { title: "Gazzera Budget Flat", price: 189000, lat: 45.4907, lon: 12.2206, address: "Gazzera, Mestre" },
+        { title: "Parco Albanese Residence", price: 329000, lat: 45.5015, lon: 12.2502, address: "Parco Albanese, Mestre" },
+        { title: "San Giuliano Premium Condo", price: 458000, lat: 45.4805, lon: 12.2719, address: "San Giuliano, Mestre" },
+        { title: "Spinea Border House", price: 298000, lat: 45.4904, lon: 12.1638, address: "Near Spinea, Venice Metro" },
+        { title: "Miranese Road Apartment", price: 239000, lat: 45.4878, lon: 12.2169, address: "Via Miranese, Mestre" },
+        { title: "Marcon Family Villa", price: 515000, lat: 45.5632, lon: 12.3012, address: "Marcon, Venice Metro" },
+      ];
+
+      L.tileLayer(
+        "https://maps.geoapify.com/v1/tile/osm-carto/{z}/{x}/{y}.png?apiKey={apiKey}",
+        {
+          attribution:
+            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors | Tiles by <a href="https://www.geoapify.com/">Geoapify</a>',
+          apiKey: apiKeyInput.value.trim(),
+          maxZoom: 20,
+        }
+      ).addTo(map);
+
+      function buildPlacesUrl() {
+        const apiKey = apiKeyInput.value.trim();
+        const categories = categoriesInput.value.trim() || "accommodation";
+        const name = nameInput.value.trim();
+        const propertyType = propertyTypeSelect.value;
+        const limit = limitInput.value.trim();
+
+        if (!apiKey) throw new Error("API key is required.");
+
+        const params = new URLSearchParams();
+        params.set("apiKey", apiKey);
+        params.set("categories", categories);
+        if (name) params.set("name", name);
+        params.set("lang", "en");
+        if (limit) params.set("limit", limit);
+
+        if (propertyType) {
+          params.set("conditions", "accommodation." + propertyType);
+        }
+
+        // Scope priority: explicit place_id input > selected city from map/city search > map bounds.
+        const explicitPlaceId = cityPlaceIdInput.value.trim();
+        if (explicitPlaceId) {
+          selectedCityPlaceId = explicitPlaceId;
+          params.set("filter", "place:" + explicitPlaceId);
+        } else if (selectedCityPlaceId) {
+          params.set("filter", "place:" + selectedCityPlaceId);
+        } else {
+          const bounds = map.getBounds();
+          const rect =
+            bounds.getWest().toFixed(6) +
+            "," +
+            bounds.getNorth().toFixed(6) +
+            "," +
+            bounds.getEast().toFixed(6) +
+            "," +
+            bounds.getSouth().toFixed(6);
+          params.set("filter", "rect:" + rect);
+        }
+
+        return "https://api.geoapify.com/v2/places?" + params.toString();
+      }
+
+      function renderPlaces(features) {
+        markersLayer.clearLayers();
+        placesList.innerHTML = "";
+
+        if (!features.length) {
+          statusText.textContent = "0 places found.";
+          const empty = document.createElement("div");
+          empty.className = "places-item";
+          empty.innerHTML = "<h4>No places found</h4><div class='muted'>Try another category/filter/bias.</div>";
+          placesList.appendChild(empty);
+          return;
+        }
+
+        statusText.textContent = features.length + " places found.";
+
+        features.forEach((feature, index) => {
+          const props = feature.properties || {};
+          const lat = props.lat ?? feature.geometry?.coordinates?.[1];
+          const lon = props.lon ?? feature.geometry?.coordinates?.[0];
+          const name = props.name || props.formatted || "Unnamed place";
+          const categories = Array.isArray(props.categories) ? props.categories.slice(0, 3).join(", ") : "";
+
+          if (typeof lat === "number" && typeof lon === "number") {
+            const marker = L.marker([lat, lon], {
+              icon: L.divIcon({
+                className: "home-marker",
+                html: "🏠",
+                iconSize: [20, 20],
+                iconAnchor: [10, 10],
+              }),
+            }).addTo(markersLayer);
+
+            marker.bindPopup(
+              "<strong>" + name + "</strong><br/>" +
+              (props.formatted || "") + "<br/>" +
+              (categories || "")
+            );
+          }
+
+          const item = document.createElement("div");
+          item.className = "places-item";
+          item.innerHTML =
+            "<h4>" + (index + 1) + ". " + name + "</h4>" +
+            "<div class='muted'>" + (props.formatted || "No address") + "</div>" +
+            "<div class='muted'>Categories: " + (categories || "N/A") + "</div>" +
+            (typeof props.distance === "number" ? "<div class='muted'>Distance: " + Math.round(props.distance) + " m</div>" : "");
+          placesList.appendChild(item);
+        });
+
+        if (markersLayer.getLayers().length > 0) {
+          map.fitBounds(markersLayer.getBounds(), { padding: [20, 20] });
+        }
+      }
+
+      function parseSampleProperties() {
+        return SAMPLE_PROPERTIES
+          .map((item) => ({
+            title: String(item.title || "").trim(),
+            lat: Number(item.lat),
+            lon: Number(item.lon),
+            price: item.price != null ? Number(item.price) : null,
+            address: item.address ? String(item.address) : "",
+          }))
+          .filter((item) => item.title && Number.isFinite(item.lat) && Number.isFinite(item.lon));
+      }
+
+      function renderSampleProperties(properties) {
+        markersLayer.clearLayers();
+        placesList.innerHTML = "";
+
+        if (!properties.length) {
+          statusText.textContent = "0 sample properties found in input.";
+          const empty = document.createElement("div");
+          empty.className = "places-item";
+          empty.innerHTML = "<h4>No valid sample properties</h4><div class='muted'>Check JSON structure and required fields.</div>";
+          placesList.appendChild(empty);
+          return;
+        }
+
+        statusText.textContent = properties.length + " sample properties loaded.";
+        responseBox.textContent = "Showing sample properties from JSON input (no API request).";
+
+        properties.forEach((property, index) => {
+          const marker = L.marker([property.lat, property.lon], {
+            icon: L.divIcon({
+              className: "home-marker",
+              html: "🏠",
+              iconSize: [20, 20],
+              iconAnchor: [10, 10],
+            }),
+          }).addTo(markersLayer);
+
+          marker.bindPopup(
+            "<strong>" +
+              property.title +
+              "</strong><br/>" +
+              (property.address || "No address") +
+              (property.price != null ? "<br/>$" + property.price.toLocaleString() : "")
+          );
+
+          const item = document.createElement("div");
+          item.className = "places-item";
+          item.innerHTML =
+            "<h4>" +
+            (index + 1) +
+            ". " +
+            property.title +
+            "</h4>" +
+            "<div class='muted'>" +
+            (property.address || "No address") +
+            "</div>" +
+            (property.price != null
+              ? "<div class='muted'>Price: $" + property.price.toLocaleString() + "</div>"
+              : "") +
+            "<div class='muted'>Lat: " +
+            property.lat.toFixed(5) +
+            ", Lon: " +
+            property.lon.toFixed(5) +
+            "</div>";
+          placesList.appendChild(item);
+        });
+
+        if (markersLayer.getLayers().length > 0) {
+          map.fitBounds(markersLayer.getBounds(), { padding: [20, 20] });
+        }
+      }
+
+      function isPointInRing(point, ring) {
+        let inside = false;
+        for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+          const xi = ring[i][0];
+          const yi = ring[i][1];
+          const xj = ring[j][0];
+          const yj = ring[j][1];
+          const intersect =
+            yi > point[1] !== yj > point[1] &&
+            point[0] < ((xj - xi) * (point[1] - yi)) / (yj - yi + Number.EPSILON) + xi;
+          if (intersect) inside = !inside;
+        }
+        return inside;
+      }
+
+      function isPointInPolygon(point, polygonCoordinates) {
+        if (!polygonCoordinates || !polygonCoordinates.length) return false;
+        if (!isPointInRing(point, polygonCoordinates[0])) return false;
+        for (let i = 1; i < polygonCoordinates.length; i += 1) {
+          if (isPointInRing(point, polygonCoordinates[i])) return false;
+        }
+        return true;
+      }
+
+      function haversineKm(lat1, lon1, lat2, lon2) {
+        const toRad = (d) => (d * Math.PI) / 180;
+        const R = 6371;
+        const dLat = toRad(lat2 - lat1);
+        const dLon = toRad(lon2 - lon1);
+        const a =
+          Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+      }
+
+      function filterSampleByGeometry(properties, geometry) {
+        if (!geometry || !geometry.type) return properties;
+
+        if (geometry.type === "Polygon") {
+          return properties.filter((p) => isPointInPolygon([p.lon, p.lat], geometry.coordinates));
+        }
+
+        if (geometry.type === "MultiPolygon") {
+          return properties.filter((p) =>
+            geometry.coordinates.some((poly) => isPointInPolygon([p.lon, p.lat], poly))
+          );
+        }
+
+        if (geometry.type === "Point") {
+          const center = geometry.coordinates;
+          return properties.filter((p) => haversineKm(center[1], center[0], p.lat, p.lon) <= 8);
+        }
+
+        return properties;
+      }
+
+      async function searchPlaces() {
+        responseBox.textContent = "Loading places...";
+        try {
+          if (!categoriesInput.value.trim()) {
+            const sampleProperties = parseSampleProperties();
+            const filtered = selectedCityGeometry
+              ? filterSampleByGeometry(sampleProperties, selectedCityGeometry)
+              : sampleProperties;
+            renderSampleProperties(filtered);
+            if (selectedCityGeometry) {
+              statusText.textContent =
+                filtered.length +
+                " sample properties in selected location" +
+                (selectedCityName ? " (" + selectedCityName + ")" : "") +
+                ".";
+            } else {
+              statusText.textContent =
+                sampleProperties.length +
+                " sample properties loaded (categories empty, using your list).";
+            }
+            return;
+          }
+
+          const requestOptions = { method: "GET" };
+          const url = buildPlacesUrl();
+          const response = await fetch(url, requestOptions);
+          const result = await response.json();
+          console.log(result);
+          responseBox.textContent = JSON.stringify(result, null, 2);
+          const features = Array.isArray(result.features) ? result.features : [];
+          renderPlaces(features);
+        } catch (error) {
+          console.log("error", error);
+          responseBox.textContent = "Error: " + error.message;
+          statusText.textContent = "Places request failed.";
+          placesList.innerHTML = "";
+          markersLayer.clearLayers();
+        }
+      }
+
+      function pickCityFeature(features) {
+        if (!Array.isArray(features) || !features.length) return null;
+        const match = features.find((feature) => {
+          const props = feature.properties || {};
+          const typeText = String(
+            props.result_type || props.place_type || props.boundary_type || ""
+          ).toLowerCase();
+          return (
+            typeText.includes("city") ||
+            typeText.includes("municipality") ||
+            typeText.includes("town")
+          );
+        });
+        return match || features[0];
+      }
+
+      async function handleMapClickCitySearch(lat, lon) {
+        const apiKey = apiKeyInput.value.trim();
+        if (!apiKey) {
+          statusText.textContent = "API key required for city click search.";
+          return;
+        }
+
+        if (clickedPointMarker) {
+          map.removeLayer(clickedPointMarker);
+        }
+        clickedPointMarker = L.circleMarker([lat, lon], {
+          radius: 7,
+          color: "#dc2626",
+          fillColor: "#ef4444",
+          fillOpacity: 0.9,
+          weight: 1.5,
+        }).addTo(map);
+
+        statusText.textContent = "Detecting city from clicked point...";
+
+        try {
+          const url =
+            "https://api.geoapify.com/v1/boundaries/part-of?lat=" +
+            encodeURIComponent(lat) +
+            "&lon=" +
+            encodeURIComponent(lon) +
+            "&boundaries=administrative&geometry=geometry_1000&apiKey=" +
+            encodeURIComponent(apiKey);
+
+          const response = await fetch(url, { method: "GET", redirect: "follow" });
+          const result = await response.json();
+          const cityFeature = pickCityFeature(result.features);
+
+          if (!cityFeature) {
+            statusText.textContent = "No city boundary found for clicked point.";
+            return;
+          }
+
+          const cityPlaceId = cityFeature.properties?.place_id || cityFeature.properties?.id || "";
+          if (!cityPlaceId) {
+            statusText.textContent = "City found but no place_id returned.";
+            return;
+          }
+
+          selectedCityPlaceId = cityPlaceId;
+          cityPlaceIdInput.value = cityPlaceId;
+
+          cityLayer.clearLayers();
+          const cityGeoJson = L.geoJSON(cityFeature, {
+            style: {
+              color: "#2563eb",
+              weight: 2,
+              fillColor: "#60a5fa",
+              fillOpacity: 0.2,
+            },
+            pointToLayer: (feature, latlng) =>
+              L.circleMarker(latlng, {
+                radius: 8,
+                color: "#2563eb",
+                fillColor: "#60a5fa",
+                fillOpacity: 0.9,
+                weight: 1.5,
+              }),
+          }).addTo(cityLayer);
+
+          const cityName =
+            cityFeature.properties?.city ||
+            cityFeature.properties?.name ||
+            cityFeature.properties?.formatted ||
+            "Selected city";
+          selectedCityGeometry = cityFeature.geometry || null;
+          selectedCityName = cityName;
+
+          if (cityGeoJson.getBounds && cityGeoJson.getLayers().length > 0) {
+            map.fitBounds(cityGeoJson.getBounds(), { padding: [20, 20] });
+          }
+
+          statusText.textContent = "City selected: " + cityName + ". Searching...";
+          await searchPlaces();
+        } catch (error) {
+          console.error(error);
+          statusText.textContent = "Failed to detect city from map click.";
+        }
+      }
+
+      async function handleCityNameSearch() {
+        const apiKey = apiKeyInput.value.trim();
+        const cityNameQuery = cityInput.value.trim();
+
+        if (!apiKey) {
+          statusText.textContent = "API key required for city search.";
+          return;
+        }
+        if (!cityNameQuery) {
+          statusText.textContent = "Enter a city or district name first.";
+          return;
+        }
+
+        statusText.textContent = "Searching city: " + cityNameQuery + "...";
+
+        try {
+          const geocodeUrl =
+            "https://api.geoapify.com/v1/geocode/search?city=" +
+            encodeURIComponent(cityNameQuery) +
+            "&format=json&limit=1&apiKey=" +
+            encodeURIComponent(apiKey);
+
+          const geocodeResponse = await fetch(geocodeUrl, { method: "GET", redirect: "follow" });
+          const geocodeResult = await geocodeResponse.json();
+          const first = Array.isArray(geocodeResult.results) ? geocodeResult.results[0] : null;
+
+          if (!first || !Number.isFinite(first.lat) || !Number.isFinite(first.lon)) {
+            statusText.textContent = "City not found: " + cityNameQuery;
+            return;
+          }
+
+          map.setView([first.lat, first.lon], 12);
+          await handleMapClickCitySearch(first.lat, first.lon);
+        } catch (error) {
+          console.error(error);
+          statusText.textContent = "City search failed.";
+        }
+      }
+
+      searchBtn.addEventListener("click", searchPlaces);
+      findCityBtn.addEventListener("click", handleCityNameSearch);
+      cityInput.addEventListener("keydown", async (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          await handleCityNameSearch();
+        }
+      });
+      showSampleBtn.addEventListener("click", () => {
+        try {
+          const sampleProperties = parseSampleProperties();
+          const filtered = selectedCityGeometry
+            ? filterSampleByGeometry(sampleProperties, selectedCityGeometry)
+            : sampleProperties;
+          renderSampleProperties(filtered);
+          if (selectedCityGeometry) {
+            statusText.textContent =
+              filtered.length +
+              " sample properties in selected location" +
+              (selectedCityName ? " (" + selectedCityName + ")" : "") +
+              ".";
+          }
+        } catch (error) {
+          statusText.textContent = "Sample properties load failed.";
+          responseBox.textContent = "Error: " + error.message;
+          placesList.innerHTML = "";
+          markersLayer.clearLayers();
+        }
+      });
+      clearBtn.addEventListener("click", () => {
+        markersLayer.clearLayers();
+        cityLayer.clearLayers();
+        selectedCityGeometry = null;
+        selectedCityName = "";
+        selectedCityPlaceId = "";
+        cityPlaceIdInput.value = "";
+        if (clickedPointMarker) {
+          map.removeLayer(clickedPointMarker);
+          clickedPointMarker = null;
+        }
+        placesList.innerHTML = "";
+        statusText.textContent = "Cleared results.";
+        responseBox.textContent = "Waiting for Places API call...";
+      });
+
+      map.on("click", async (e) => {
+        const { lat, lng } = e.latlng;
+        await handleMapClickCitySearch(lat, lng);
+      });
+
+      handleCityNameSearch();
+    </script>
+  </body>
+</html>

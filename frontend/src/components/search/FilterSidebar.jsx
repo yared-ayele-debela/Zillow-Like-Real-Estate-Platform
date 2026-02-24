@@ -179,10 +179,11 @@ const FilterSidebar = ({ isOpen, onClose, onApplyFilters }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden">
+    <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="absolute inset-0 bg-black bg-opacity-50" onClick={onClose}></div>
-      <div className="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-xl overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
+      <div className="relative min-h-full flex items-start justify-center p-4 md:p-8">
+        <div className="relative w-full max-w-6xl bg-white rounded-xl shadow-xl border border-gray-200 max-h-[90vh] overflow-y-auto">
+        <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between z-10 rounded-t-xl">
           <h2 className="text-xl font-semibold text-gray-900 flex items-center">
             <FunnelIcon className="w-5 h-5 mr-2" />
             Filters
@@ -196,6 +197,7 @@ const FilterSidebar = ({ isOpen, onClose, onApplyFilters }) => {
         </div>
 
         <div className="px-6 py-4 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {/* Property Type */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -438,23 +440,25 @@ const FilterSidebar = ({ isOpen, onClose, onApplyFilters }) => {
               <span className="ml-2 text-sm text-gray-700">Featured Properties Only</span>
             </label>
           </div>
+          </div>
 
           {/* Action Buttons */}
-          <div className="sticky bottom-0 bg-white border-t pt-4 pb-4 space-y-2">
-            <button
-              onClick={handleApplyFilters}
-              className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              Apply Filters
-            </button>
+          <div className="sticky bottom-0 bg-white border-t pt-4 pb-4 flex items-center justify-end gap-2">
             <button
               onClick={handleResetFilters}
-              className="w-full bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
+              className="bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
             >
               Reset Filters
             </button>
+            <button
+              onClick={handleApplyFilters}
+              className="bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              Apply Filters
+            </button>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

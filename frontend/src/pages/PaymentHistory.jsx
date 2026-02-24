@@ -85,65 +85,65 @@ const PaymentHistory = () => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'completed':
-        return 'bg-green-100 text-green-800';
+        return 'bg-luxury-emerald/20 text-luxury-emerald';
       case 'pending':
         return 'bg-yellow-100 text-yellow-800';
       case 'failed':
         return 'bg-red-100 text-red-800';
       case 'refunded':
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-luxury-navy text-luxury-warm';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-luxury-navy text-luxury-warm';
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-luxury-charcoal flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading payment history...</p>
+          <p className="mt-4 text-luxury-warm/70">Loading payment history...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-luxury-charcoal">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Payment History</h1>
+        <h1 className="text-3xl font-bold text-luxury-warm mb-8">Payment History</h1>
 
         {payments.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-12 text-center">
-            <p className="text-gray-500">No payments found</p>
+          <div className="bg-luxury-navy rounded-lg shadow p-12 text-center">
+            <p className="text-luxury-warm/60">No payments found</p>
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="bg-luxury-navy rounded-lg shadow overflow-hidden">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-luxury-charcoal">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Property</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-luxury-warm/60 uppercase">Date</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-luxury-warm/60 uppercase">Type</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-luxury-warm/60 uppercase">Property</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-luxury-warm/60 uppercase">Amount</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-luxury-warm/60 uppercase">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-luxury-warm/60 uppercase">Actions</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-luxury-navy divide-y divide-gray-200">
                 {payments.map((payment) => (
                   <tr key={payment.id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-luxury-warm">
                       {new Date(payment.created_at).toLocaleDateString()}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-luxury-warm">
                       {payment.type.replace('_', ' ')}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-luxury-warm">
                       {payment.property ? (
                         <Link
                           to={`/properties/${payment.property.id}`}
-                          className="text-indigo-600 hover:text-indigo-700"
+                          className="text-luxury-gold hover:text-luxury-gold"
                         >
                           {payment.property.title}
                         </Link>
@@ -151,7 +151,7 @@ const PaymentHistory = () => {
                         'N/A'
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-luxury-warm">
                       ${payment.amount.toFixed(2)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -167,7 +167,7 @@ const PaymentHistory = () => {
                       <div className="flex gap-2">
                         <button
                           onClick={() => downloadInvoice(payment)}
-                          className="text-indigo-600 hover:text-indigo-900"
+                          className="text-luxury-gold hover:text-luxury-gold"
                           title="Download Invoice"
                         >
                           <ArrowDownTrayIcon className="h-5 w-5" />
@@ -201,8 +201,8 @@ const PaymentHistory = () => {
                 }}
                 className={`px-4 py-2 border rounded ${
                   pagination.current_page === page
-                    ? 'bg-indigo-600 text-white'
-                    : 'hover:bg-gray-50'
+                    ? 'bg-luxury-gold text-luxury-navy'
+                    : 'hover:bg-luxury-charcoal'
                 }`}
               >
                 {page}

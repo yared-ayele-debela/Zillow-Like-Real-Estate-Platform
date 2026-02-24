@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { FunnelIcon } from '@heroicons/react/24/outline';
 import usePropertyStore from '../../store/propertyStore';
 import PropertyCard from './PropertyCard';
-import SearchBar from '../search/SearchBar';
-import FilterSidebar from '../search/FilterSidebar';
 import SaveSearchModal from '../search/SaveSearchModal';
+import MapSearch from '../search/MapSearch';
 import useAuthStore from '../../store/authStore';
+
+const PROPERTY_TYPES = ['house', 'apartment', 'condo', 'townhouse', 'land', 'commercial'];
+const STATUS_OPTIONS = ['for_sale', 'for_rent', 'sold', 'pending'];
+const BED_BATH_OPTIONS = ['1', '2', '3', '4', '5'];
 
 const PropertyList = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -15,14 +17,15 @@ const PropertyList = () => {
     isLoading,
     error,
     pagination,
-    filters,
     fetchProperties,
     setFilters,
   } = usePropertyStore();
-  const { user, isAuthenticated } = useAuthStore();
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
-  const [showFilters, setShowFilters] = useState(false);
+  const { isAuthenticated } = useAuthStore();
+  const [viewMode, setViewMode] = useState('split'); // 'split' or 'list'
   const [showSaveSearch, setShowSaveSearch] = useState(false);
+  const [selectedPropertyId, setSelectedPropertyId] = useState(null);
+  const [areaFilterIds, setAreaFilterIds] = useState(null);
+  const [selectedAreaName, setSelectedAreaName] = useState('');
 
   useEffect(() => {
     // Sync URL params with filters
@@ -55,10 +58,11 @@ const PropertyList = () => {
       params[key] = value;
     });
     params.page = page;
-    
+    params.per_page = params.per_page || (viewMode === 'split' ? 100 : 15);
+
     // Fetch properties with current filters from URL
     fetchProperties(page, params);
-  }, [searchParams, fetchProperties]);
+  }, [searchParams, fetchProperties, viewMode]);
 
   const handleFavoriteToggle = (propertyId) => {
     // TODO: Implement favorite toggle
@@ -70,6 +74,54 @@ const PropertyList = () => {
     params.set('page', newPage);
     setSearchParams(params);
   };
+
+  const updateFilterParam = (key, value) => {
+    const params = new URLSearchParams(searchParams);
+    if (value === '' || value === null || value === undefined) {
+      params.delete(key);
+    } else {
+      params.set(key, value);
+    }
+    params.set('page', '1');
+    setSearchParams(params);
+  };
+
+  const clearAllFilters = () => {
+    const params = new URLSearchParams(searchParams);
+    [
+      'property_type',
+      'status',
+      'min_price',
+      'max_price',
+      'bedrooms',
+      'bathrooms',
+      'min_square_feet',
+      'max_square_feet',
+      'min_year_built',
+      'max_year_built',
+      'city',
+      'state',
+      'amenities',
+      'featured',
+    ].forEach((key) => params.delete(key));
+    params.set('page', '1');
+    setSearchParams(params);
+  };
+
+  const handleMapPropertyClick = (property) => {
+    setSelectedPropertyId(property.id);
+  };
+
+  const areaFilteredProperties = areaFilterIds
+    ? properties.filter((p) => areaFilterIds.includes(p.id))
+    : properties;
+
+  const displayedProperties = selectedPropertyId
+    ? [
+        ...areaFilteredProperties.filter((p) => p.id === selectedPropertyId),
+        ...areaFilteredProperties.filter((p) => p.id !== selectedPropertyId),
+      ]
+    : areaFilteredProperties;
 
   if (isLoading && properties.length === 0) {
     return (
@@ -88,65 +140,57 @@ const PropertyList = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Search Bar */}
-      <div className="mb-6">
-        <SearchBar onSearch={() => fetchProperties(1)} />
-      </div>
+    <div className="container-fluid mx-auto px-4 py-8">
+      {/* Horizontal Filters + Header */}
+      <div className="mb-6 rounded-lg border border-luxury-gold/20 bg-white px-4 py-4">
+        <div className="flex flex-wrap justify-between items-center gap-3">
+          <div className="flex items-center gap-4">
+            <h2 className="text-2xl font-bold text-luxury-warm">
+              Properties ({pagination.total})
+            </h2>
+            <div className="flex gap-2">
+              <button
+                onClick={clearAllFilters}
+                className="px-4 py-2 border border-luxury-gold/30 rounded-md hover:bg-luxury-charcoal text-sm font-medium text-luxury-warm/80"
+              >
+                Clear Filters
+              </button>
+              {isAuthenticated && searchParams.toString() && (
+                <button
+                  onClick={() => setShowSaveSearch(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-luxury-gold text-luxury-navy rounded-md hover:bg-luxury-gold text-sm font-medium"
+                >
+                  Save Search
+                </button>
+              )}
+            </div>
+          </div>
 
-      {/* Header with Filters and View Toggle */}
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-4">
-          <h2 className="text-2xl font-bold text-gray-900">
-            Properties ({pagination.total})
-          </h2>
           <div className="flex gap-2">
             <button
-              onClick={() => setShowFilters(true)}
-              className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-sm font-medium text-gray-700"
+              onClick={() => setViewMode('split')}
+              className={`p-2 rounded ${
+                viewMode === 'split'
+                  ? 'bg-luxury-gold text-luxury-navy'
+                  : 'bg-gray-200 text-luxury-warm/80 hover:bg-gray-300'
+              }`}
             >
-              <FunnelIcon className="w-5 h-5" />
-              Filters
+              Map + List
             </button>
-            {isAuthenticated && searchParams.toString() && (
-              <button
-                onClick={() => setShowSaveSearch(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm font-medium"
-              >
-                Save Search
-              </button>
-            )}
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-2 rounded ${
+                viewMode === 'list'
+                  ? 'bg-luxury-gold text-luxury-navy'
+                  : 'bg-gray-200 text-luxury-warm/80 hover:bg-gray-300'
+              }`}
+            >
+              List
+            </button>
           </div>
         </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setViewMode('grid')}
-            className={`p-2 rounded ${
-              viewMode === 'grid'
-                ? 'bg-indigo-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            Grid
-          </button>
-          <button
-            onClick={() => setViewMode('list')}
-            className={`p-2 rounded ${
-              viewMode === 'list'
-                ? 'bg-indigo-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            List
-          </button>
-        </div>
-      </div>
 
-      {/* Sort and Active Filters */}
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
-        {/* Sort Dropdown */}
-        <div className="flex items-center gap-2">
-          <label className="text-sm text-gray-700">Sort by:</label>
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
           <select
             value={`${searchParams.get('sort_by') || 'created_at'}_${searchParams.get('sort_order') || 'desc'}`}
             onChange={(e) => {
@@ -157,19 +201,166 @@ const PropertyList = () => {
               params.set('page', '1');
               setSearchParams(params);
             }}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+            className="px-3 py-2 border border-luxury-gold/30 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
           >
-            <option value="created_at_desc">Newest First</option>
-            <option value="created_at_asc">Oldest First</option>
-            <option value="price_asc">Price: Low to High</option>
-            <option value="price_desc">Price: High to Low</option>
-            <option value="square_feet_desc">Largest First</option>
-            <option value="views_desc">Most Viewed</option>
-            <option value="saves_desc">Most Saved</option>
+            <option value="created_at_desc">Sort: Newest First</option>
+            <option value="created_at_asc">Sort: Oldest First</option>
+            <option value="price_asc">Sort: Price Low to High</option>
+            <option value="price_desc">Sort: Price High to Low</option>
+            <option value="square_feet_desc">Sort: Largest First</option>
+            <option value="views_desc">Sort: Most Viewed</option>
+            <option value="saves_desc">Sort: Most Saved</option>
+          </select>
+
+          <select
+            value={searchParams.get('property_type') || ''}
+            onChange={(e) => updateFilterParam('property_type', e.target.value)}
+            className="px-3 py-2 border border-luxury-gold/30 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          >
+            <option value="">Property Type</option>
+            {PROPERTY_TYPES.map((type) => (
+              <option key={type} value={type}>
+                {type.replace('_', ' ')}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={searchParams.get('status') || ''}
+            onChange={(e) => updateFilterParam('status', e.target.value)}
+            className="px-3 py-2 border border-luxury-gold/30 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          >
+            <option value="">Status</option>
+            {STATUS_OPTIONS.map((status) => (
+              <option key={status} value={status}>
+                {status.replace('_', ' ')}
+              </option>
+            ))}
+          </select>
+
+          <input
+            type="number"
+            placeholder="Min Price"
+            value={searchParams.get('min_price') || ''}
+            onChange={(e) => updateFilterParam('min_price', e.target.value)}
+            className="px-3 py-2 border border-luxury-gold/30 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          />
+
+          <input
+            type="number"
+            placeholder="Max Price"
+            value={searchParams.get('max_price') || ''}
+            onChange={(e) => updateFilterParam('max_price', e.target.value)}
+            className="px-3 py-2 border border-luxury-gold/30 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          />
+
+          <select
+            value={searchParams.get('bedrooms') || ''}
+            onChange={(e) => updateFilterParam('bedrooms', e.target.value)}
+            className="px-3 py-2 border border-luxury-gold/30 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          >
+            <option value="">Beds</option>
+            {BED_BATH_OPTIONS.map((value) => (
+              <option key={`beds-${value}`} value={value}>
+                {value}+ Beds
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={searchParams.get('bathrooms') || ''}
+            onChange={(e) => updateFilterParam('bathrooms', e.target.value)}
+            className="px-3 py-2 border border-luxury-gold/30 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          >
+            <option value="">Baths</option>
+            {BED_BATH_OPTIONS.map((value) => (
+              <option key={`baths-${value}`} value={value}>
+                {value}+ Baths
+              </option>
+            ))}
           </select>
         </div>
 
-        {/* Active Filters Display */}
+        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
+          <input
+            type="text"
+            placeholder="City"
+            value={searchParams.get('city') || ''}
+            onChange={(e) => updateFilterParam('city', e.target.value)}
+            className="px-3 py-2 border border-luxury-gold/30 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          />
+
+          <input
+            type="text"
+            placeholder="State"
+            value={searchParams.get('state') || ''}
+            onChange={(e) => updateFilterParam('state', e.target.value)}
+            className="px-3 py-2 border border-luxury-gold/30 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          />
+
+          <input
+            type="number"
+            placeholder="Min Sq Ft"
+            value={searchParams.get('min_square_feet') || ''}
+            onChange={(e) => updateFilterParam('min_square_feet', e.target.value)}
+            className="px-3 py-2 border border-luxury-gold/30 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          />
+
+          <input
+            type="number"
+            placeholder="Max Sq Ft"
+            value={searchParams.get('max_square_feet') || ''}
+            onChange={(e) => updateFilterParam('max_square_feet', e.target.value)}
+            className="px-3 py-2 border border-luxury-gold/30 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          />
+
+          <input
+            type="number"
+            placeholder="Min Year"
+            value={searchParams.get('min_year_built') || ''}
+            onChange={(e) => updateFilterParam('min_year_built', e.target.value)}
+            className="px-3 py-2 border border-luxury-gold/30 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          />
+
+          <input
+            type="number"
+            placeholder="Max Year"
+            value={searchParams.get('max_year_built') || ''}
+            onChange={(e) => updateFilterParam('max_year_built', e.target.value)}
+            className="px-3 py-2 border border-luxury-gold/30 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          />
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <span className="text-sm font-medium text-luxury-warm/80">Featured</span>
+          <button
+            type="button"
+            onClick={() =>
+              updateFilterParam(
+                'featured',
+                searchParams.get('featured') === 'true' ? '' : 'true'
+              )
+            }
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+              searchParams.get('featured') === 'true' ? 'bg-indigo-600' : 'bg-gray-300'
+            }`}
+            aria-pressed={searchParams.get('featured') === 'true'}
+            aria-label="Toggle featured properties only"
+          >
+            <span
+              className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                searchParams.get('featured') === 'true' ? 'translate-x-5' : 'translate-x-1'
+              }`}
+            />
+          </button>
+          <span className="text-sm text-luxury-warm/60">
+            {searchParams.get('featured') === 'true' ? 'Featured only' : 'All listings'}
+          </span>
+        </div>
+      </div>
+
+      {/* Active Filters Display */}
+      <div className="mb-4">
         {searchParams.toString() && (
           <div className="flex flex-wrap gap-2">
             {Array.from(searchParams.entries()).map(([key, value]) => {
@@ -188,7 +379,7 @@ const PropertyList = () => {
                       params.delete(key);
                       setSearchParams(params);
                     }}
-                    className="ml-2 text-indigo-600 hover:text-indigo-800"
+                    className="ml-2 text-luxury-gold hover:text-luxury-gold"
                   >
                     ×
                   </button>
@@ -198,16 +389,6 @@ const PropertyList = () => {
           </div>
         )}
       </div>
-
-      {/* Filter Sidebar */}
-      <FilterSidebar
-        isOpen={showFilters}
-        onClose={() => setShowFilters(false)}
-        onApplyFilters={() => {
-          fetchProperties(1);
-          setShowFilters(false);
-        }}
-      />
 
       {/* Save Search Modal */}
       <SaveSearchModal
@@ -222,26 +403,78 @@ const PropertyList = () => {
 
       {properties.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-gray-500 text-lg">No properties found</p>
-          <p className="text-gray-400 mt-2">Try adjusting your filters</p>
+          <p className="text-luxury-warm/60 text-lg">No properties found</p>
+          <p className="text-luxury-warm/50 mt-2">Try adjusting your filters</p>
         </div>
       ) : (
         <>
-          <div
-            className={
-              viewMode === 'grid'
-                ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
-                : 'space-y-4'
-            }
-          >
-            {properties.map((property) => (
-              <PropertyCard
-                key={property.id}
-                property={property}
-                onFavoriteToggle={handleFavoriteToggle}
-                isFavorite={false} // TODO: Get from favorites store
-              />
-            ))}
+          <div className={viewMode === 'split' ? 'grid grid-cols-1 xl:grid-cols-12 gap-6' : ''}>
+            {viewMode === 'split' && (
+              <div className="xl:col-span-7">
+                <div className="sticky top-4">
+                  <MapSearch
+                    properties={properties}
+                    onPropertyClick={handleMapPropertyClick}
+                    onAreaFilterChange={(payload) => {
+                      if (!payload) {
+                        setAreaFilterIds(null);
+                        setSelectedAreaName('');
+                        setSelectedPropertyId(null);
+                        return;
+                      }
+                      setAreaFilterIds(payload.propertyIds || []);
+                      setSelectedAreaName(payload.areaName || '');
+                      setSelectedPropertyId(null);
+                    }}
+                    enableBoundsFilter={false}
+                    heightClass="h-[70vh]"
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className={viewMode === 'split' ? 'xl:col-span-5' : ''}>
+              {viewMode === 'split' && selectedAreaName && (
+                <div className="mb-3 px-3 py-2 rounded-md bg-indigo-50 text-indigo-700 text-sm font-medium">
+                  Showing properties in: {selectedAreaName} ({displayedProperties.length})
+                  <button
+                    onClick={() => {
+                      setAreaFilterIds(null);
+                      setSelectedAreaName('');
+                      setSelectedPropertyId(null);
+                    }}
+                    className="ml-3 text-indigo-700 underline"
+                  >
+                    Remove Boundary
+                  </button>
+                </div>
+              )}
+              {viewMode === 'split' && selectedAreaName && displayedProperties.length === 0 && (
+                <div className="mb-3 px-3 py-3 rounded-md bg-amber-50 text-amber-800 text-sm">
+                  No properties found inside this selected boundary. Try another area.
+                </div>
+              )}
+              <div
+                className={
+                  viewMode === 'split'
+                    ? 'grid grid-cols-1 md:grid-cols-2 gap-4'
+                    : 'space-y-4'
+                }
+              >
+                {displayedProperties.map((property) => (
+                  <div
+                    key={property.id}
+                    className={selectedPropertyId === property.id ? 'ring-2 ring-red-500 rounded-lg' : ''}
+                  >
+                    <PropertyCard
+                      property={property}
+                      onFavoriteToggle={handleFavoriteToggle}
+                      isFavorite={false} // TODO: Get from favorites store
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Pagination */}
@@ -250,7 +483,7 @@ const PropertyList = () => {
               <button
                 onClick={() => handlePageChange(pagination.current_page - 1)}
                 disabled={pagination.current_page === 1}
-                className="px-4 py-2 border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                className="px-4 py-2 border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-luxury-charcoal"
               >
                 Previous
               </button>
@@ -272,8 +505,8 @@ const PropertyList = () => {
                       onClick={() => handlePageChange(page)}
                       className={`px-4 py-2 border rounded ${
                         pagination.current_page === page
-                          ? 'bg-indigo-600 text-white'
-                          : 'hover:bg-gray-50'
+                          ? 'bg-luxury-gold text-luxury-navy'
+                          : 'hover:bg-luxury-charcoal'
                       }`}
                     >
                       {page}
@@ -284,7 +517,7 @@ const PropertyList = () => {
               <button
                 onClick={() => handlePageChange(pagination.current_page + 1)}
                 disabled={pagination.current_page === pagination.last_page}
-                className="px-4 py-2 border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                className="px-4 py-2 border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-luxury-charcoal"
               >
                 Next
               </button>
