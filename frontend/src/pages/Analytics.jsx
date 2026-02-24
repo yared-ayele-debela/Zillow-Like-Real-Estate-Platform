@@ -13,6 +13,7 @@ import {
 } from 'recharts';
 import dashboardService from '../services/dashboardService';
 import { propertyService } from '../services/propertyService';
+import AgentLayout from '../components/agent/AgentLayout';
 
 const Analytics = () => {
   const [dashboardData, setDashboardData] = useState(null);
@@ -43,28 +44,32 @@ const Analytics = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading analytics...</p>
+      <AgentLayout>
+        <div className="min-h-[calc(100vh-4rem)] bg-luxury-charcoal flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+            <p className="mt-4 text-luxury-warm/70">Loading analytics...</p>
+          </div>
         </div>
-      </div>
+      </AgentLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">{error}</p>
-          <button
-            onClick={fetchData}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-          >
-            Retry
-          </button>
+      <AgentLayout>
+        <div className="min-h-[calc(100vh-4rem)] bg-luxury-charcoal flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-red-600 mb-4">{error}</p>
+            <button
+              onClick={fetchData}
+              className="px-4 py-2 bg-luxury-gold text-luxury-navy rounded-md hover:bg-luxury-gold"
+            >
+              Retry
+            </button>
+          </div>
         </div>
-      </div>
+      </AgentLayout>
     );
   }
 
@@ -86,37 +91,38 @@ const Analytics = () => {
   }));
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <AgentLayout>
+      <div className="min-h-[calc(100vh-4rem)] bg-luxury-charcoal">
+        <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Analytics</h1>
-          <p className="mt-2 text-gray-600">Track your property performance and insights</p>
+          <h1 className="text-3xl font-bold text-luxury-warm">Analytics</h1>
+          <p className="mt-2 text-luxury-warm/70">Track your property performance and insights</p>
         </div>
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <p className="text-sm font-medium text-gray-600">Total Views</p>
-            <p className="text-3xl font-bold text-gray-900 mt-2">
+          <div className="bg-luxury-navy rounded-lg shadow p-6">
+            <p className="text-sm font-medium text-luxury-warm/70">Total Views</p>
+            <p className="text-3xl font-bold text-luxury-warm mt-2">
               {dashboardData?.statistics?.total_views?.toLocaleString() || 0}
             </p>
           </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <p className="text-sm font-medium text-gray-600">Total Saves</p>
-            <p className="text-3xl font-bold text-gray-900 mt-2">
+          <div className="bg-luxury-navy rounded-lg shadow p-6">
+            <p className="text-sm font-medium text-luxury-warm/70">Total Saves</p>
+            <p className="text-3xl font-bold text-luxury-warm mt-2">
               {dashboardData?.statistics?.total_saves?.toLocaleString() || 0}
             </p>
           </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <p className="text-sm font-medium text-gray-600">Total Inquiries</p>
-            <p className="text-3xl font-bold text-gray-900 mt-2">
+          <div className="bg-luxury-navy rounded-lg shadow p-6">
+            <p className="text-sm font-medium text-luxury-warm/70">Total Inquiries</p>
+            <p className="text-3xl font-bold text-luxury-warm mt-2">
               {dashboardData?.statistics?.total_inquiries?.toLocaleString() || 0}
             </p>
           </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <p className="text-sm font-medium text-gray-600">Active Listings</p>
-            <p className="text-3xl font-bold text-gray-900 mt-2">
+          <div className="bg-luxury-navy rounded-lg shadow p-6">
+            <p className="text-sm font-medium text-luxury-warm/70">Active Listings</p>
+            <p className="text-3xl font-bold text-luxury-warm mt-2">
               {dashboardData?.statistics?.active_listings?.toLocaleString() || 0}
             </p>
           </div>
@@ -125,10 +131,10 @@ const Analytics = () => {
         {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           {/* Property Performance Chart */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Top Properties by Views</h2>
+          <div className="bg-luxury-navy rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold text-luxury-warm mb-4">Top Properties by Views</h2>
             {performanceData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={500}>
                 <BarChart data={performanceData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
@@ -140,15 +146,15 @@ const Analytics = () => {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <p className="text-gray-500 text-center py-12">No data available</p>
+              <p className="text-luxury-warm/60 text-center py-12">No data available</p>
             )}
           </div>
 
           {/* Status Distribution */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Status Distribution</h2>
+          <div className="bg-luxury-navy rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold text-luxury-warm mb-4">Status Distribution</h2>
             {statusChartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={500}>
                 <BarChart data={statusChartData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
@@ -158,55 +164,55 @@ const Analytics = () => {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <p className="text-gray-500 text-center py-12">No data available</p>
+              <p className="text-luxury-warm/60 text-center py-12">No data available</p>
             )}
           </div>
         </div>
 
         {/* Property Performance Table */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">Property Performance</h2>
+        <div className="bg-luxury-navy rounded-lg shadow">
+          <div className="p-6 border-b border-luxury-gold/20">
+            <h2 className="text-xl font-semibold text-luxury-warm">Property Performance</h2>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-luxury-charcoal">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-luxury-warm/60 uppercase tracking-wider">
                     Property
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-luxury-warm/60 uppercase tracking-wider">
                     Views
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-luxury-warm/60 uppercase tracking-wider">
                     Saves
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-luxury-warm/60 uppercase tracking-wider">
                     Status
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-luxury-navy divide-y divide-gray-200">
                 {properties.slice(0, 10).map((property) => (
                   <tr key={property.id}>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{property.title}</div>
-                      <div className="text-sm text-gray-500">{property.address}</div>
+                      <div className="text-sm font-medium text-luxury-warm">{property.title}</div>
+                      <div className="text-sm text-luxury-warm/60">{property.address}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-luxury-warm">
                       {property.views || 0}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-luxury-warm">
                       {property.saves || 0}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
                         className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                           property.status === 'for_sale'
-                            ? 'bg-green-100 text-green-800'
+                            ? 'bg-luxury-emerald/20 text-luxury-emerald'
                             : property.status === 'for_rent'
                             ? 'bg-blue-100 text-blue-800'
-                            : 'bg-gray-100 text-gray-800'
+                            : 'bg-luxury-navy text-luxury-warm'
                         }`}
                       >
                         {property.status?.replace('_', ' ')}
@@ -218,8 +224,9 @@ const Analytics = () => {
             </table>
           </div>
         </div>
+        </div>
       </div>
-    </div>
+    </AgentLayout>
   );
 };
 
