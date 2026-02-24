@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { authService } from '../services/authService';
+import realtimeService from '../services/realtimeService';
 
 const useAuthStore = create(
   persist(
@@ -67,6 +68,7 @@ const useAuthStore = create(
         } catch (error) {
           console.error('Logout error:', error);
         } finally {
+          realtimeService.disconnectRealtime();
           set({
             user: null,
             token: null,
