@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { CogIcon, EnvelopeIcon, CreditCardIcon, MapPinIcon } from '@heroicons/react/24/outline';
 import AdminLayout from '../components/admin/AdminLayout';
 import paymentService from '../services/paymentService';
+import adminService from '../services/adminService';
 
 const AdminSettings = () => {
   const [activeTab, setActiveTab] = useState('site');
@@ -53,14 +54,67 @@ const AdminSettings = () => {
     is_active: true,
     sort_order: 0,
   });
+  const [locations, setLocations] = useState([]);
+  const [locationForm, setLocationForm] = useState({
+    state: '',
+    city: '',
+    sort_order: 0,
+    is_active: true,
+  });
+  const [editingLocationId, setEditingLocationId] = useState(null);
+  const [loadingLocations, setLoadingLocations] = useState(false);
+  const [savingLocation, setSavingLocation] = useState(false);
+  const [loadingSettings, setLoadingSettings] = useState(false);
+  const [savingSection, setSavingSection] = useState('');
 
   useEffect(() => {
+    fetchAdminSettings();
     fetchPaymentConfigs();
+    fetchLocations();
   }, []);
 
-  const handleSave = (section) => {
-    // Placeholder for saving settings
-    alert(`Settings for ${section} would be saved`);
+  const fetchAdminSettings = async () => {
+    try {
+      setLoadingSettings(true);
+      const data = await adminService.getSettings();
+      setSettings((prev) => ({
+        ...prev,
+        site: {
+          ...prev.site,
+          ...(data?.site || {}),
+        },
+        email: {
+          ...prev.email,
+          ...(data?.email || {}),
+        },
+      }));
+    } catch (error) {
+      console.error('Failed to load admin settings:', error);
+      alert(error.response?.data?.message || 'Failed to load admin settings');
+    } finally {
+      setLoadingSettings(false);
+    }
+  };
+
+  const handleSave = async (section) => {
+    try {
+      setSavingSection(section);
+      if (section === 'site') {
+        await adminService.updateSiteSettings(settings.site);
+        alert('Site settings saved successfully');
+      } else if (section === 'email') {
+        await adminService.updateEmailSettings(settings.email);
+        alert('Email settings saved successfully');
+      } else if (section === 'payment') {
+        alert('Payment settings use dynamic plan/package managers below');
+      } else if (section === 'locations') {
+        alert('Locations are saved per action (add/edit/delete)');
+      }
+    } catch (error) {
+      alert(error.response?.data?.message || `Failed to save ${section} settings`);
+    } finally {
+      setSavingSection('');
+    }
   };
 
   const fetchPaymentConfigs = async () => {
@@ -137,6 +191,97 @@ const AdminSettings = () => {
     fetchPaymentConfigs();
   };
 
+  const fetchLocations = async () => {
+    try {
+      setLoadingLocations(true);
+      const data = await adminService.getLocations();
+      setLocations(data?.locations || []);
+    } catch (error) {
+      console.error('Failed to load locations:', error);
+      alert(error.response?.data?.message || 'Failed to load locations');
+    } finally {
+      setLoadingLocations(false);
+    }
+  };
+
+  const resetLocationForm = () => {
+    setLocationForm({
+      state: '',
+      city: '',
+      sort_order: 0,
+      is_active: true,
+    });
+    setEditingLocationId(null);
+  };
+
+  const saveLocation = async () => {
+    const payload = {
+      state: locationForm.state.trim(),
+      city: locationForm.city.trim(),
+      sort_order: Number(locationForm.sort_order) || 0,
+      is_active: Boolean(locationForm.is_active),
+    };
+
+    if (!payload.state || !payload.city) {
+      alert('State and city are required');
+      return;
+    }
+
+    try {
+      setSavingLocation(true);
+      if (editingLocationId) {
+        await adminService.updateLocation(editingLocationId, payload);
+      } else {
+        await adminService.createLocation(payload);
+      }
+      resetLocationForm();
+      fetchLocations();
+    } catch (error) {
+      alert(error.response?.data?.message || 'Failed to save location');
+    } finally {
+      setSavingLocation(false);
+    }
+  };
+
+  const editLocation = (location) => {
+    setEditingLocationId(location.id);
+    setLocationForm({
+      state: location.state || '',
+      city: location.city || '',
+      sort_order: location.sort_order ?? 0,
+      is_active: Boolean(location.is_active),
+    });
+  };
+
+  const deleteLocation = async (locationId) => {
+    if (!window.confirm('Delete this location?')) return;
+    try {
+      await adminService.deleteLocation(locationId);
+      fetchLocations();
+    } catch (error) {
+      alert(error.response?.data?.message || 'Failed to delete location');
+    }
+  };
+
+  const toggleLocationActive = async (location) => {
+    try {
+      await adminService.updateLocation(location.id, { is_active: !location.is_active });
+      fetchLocations();
+    } catch (error) {
+      alert(error.response?.data?.message || 'Failed to update location');
+    }
+  };
+
+  const syncLocationsFromProperties = async () => {
+    try {
+      const result = await adminService.syncLocations();
+      fetchLocations();
+      alert(`${result.created_count || 0} new locations synced from properties`);
+    } catch (error) {
+      alert(error.response?.data?.message || 'Failed to sync locations');
+    }
+  };
+
   const tabs = [
     { id: 'site', name: 'Site Settings', icon: CogIcon },
     { id: 'email', name: 'Email Settings', icon: EnvelopeIcon },
@@ -175,6 +320,10 @@ const AdminSettings = () => {
 
           {/* Tab Content */}
           <div className="p-6">
+            {loadingSettings && (activeTab === 'site' || activeTab === 'email') && (
+              <div className="mb-4 text-sm text-gray-500">Loading settings...</div>
+            )}
+
             {/* Site Settings */}
             {activeTab === 'site' && (
               <div className="space-y-6">
@@ -252,9 +401,10 @@ const AdminSettings = () => {
                 </div>
                 <button
                   onClick={() => handleSave('site')}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                  disabled={savingSection === 'site'}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
                 >
-                  Save Site Settings
+                  {savingSection === 'site' ? 'Saving...' : 'Save Site Settings'}
                 </button>
               </div>
             )}
@@ -370,9 +520,10 @@ const AdminSettings = () => {
                 </div>
                 <button
                   onClick={() => handleSave('email')}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                  disabled={savingSection === 'email'}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
                 >
-                  Save Email Settings
+                  {savingSection === 'email' ? 'Saving...' : 'Save Email Settings'}
                 </button>
               </div>
             )}
@@ -589,100 +740,137 @@ const AdminSettings = () => {
             {/* Location Management */}
             {activeTab === 'locations' && (
               <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Cities</label>
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {settings.locations.cities.map((city, index) => (
-                      <span
-                        key={index}
-                        className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm"
-                      >
-                        {city}
-                        <button
-                          onClick={() => {
-                            const newCities = settings.locations.cities.filter((_, i) => i !== index);
-                            setSettings({
-                              ...settings,
-                              locations: { ...settings.locations, cities: newCities },
-                            });
-                          }}
-                          className="text-indigo-600 hover:text-indigo-800"
-                        >
-                          ×
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                  <div className="flex gap-2">
+                <div className="flex items-center justify-between gap-4">
+                  <p className="text-sm text-gray-600">
+                    Manage available states and cities used in search filters and suggestions.
+                  </p>
+                  <button
+                    onClick={syncLocationsFromProperties}
+                    className="px-3 py-2 bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200 text-sm"
+                  >
+                    Sync From Properties
+                  </button>
+                </div>
+
+                <div className="border rounded-lg p-4 space-y-4 bg-gray-50">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    {editingLocationId ? 'Edit Location' : 'Add New Location'}
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                     <input
                       type="text"
-                      placeholder="Add new city"
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md"
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter' && e.target.value) {
-                          setSettings({
-                            ...settings,
-                            locations: {
-                              ...settings.locations,
-                              cities: [...settings.locations.cities, e.target.value],
-                            },
-                          });
-                          e.target.value = '';
-                        }
-                      }}
+                      placeholder="State (e.g. CA)"
+                      value={locationForm.state}
+                      onChange={(e) => setLocationForm({ ...locationForm, state: e.target.value.toUpperCase() })}
+                      className="px-3 py-2 border border-gray-300 rounded-md"
                     />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">States</label>
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {settings.locations.states.map((state, index) => (
-                      <span
-                        key={index}
-                        className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm"
-                      >
-                        {state}
-                        <button
-                          onClick={() => {
-                            const newStates = settings.locations.states.filter((_, i) => i !== index);
-                            setSettings({
-                              ...settings,
-                              locations: { ...settings.locations, states: newStates },
-                            });
-                          }}
-                          className="text-green-600 hover:text-green-800"
-                        >
-                          ×
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                  <div className="flex gap-2">
                     <input
                       type="text"
-                      placeholder="Add new state"
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md"
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter' && e.target.value) {
-                          setSettings({
-                            ...settings,
-                            locations: {
-                              ...settings.locations,
-                              states: [...settings.locations.states, e.target.value],
-                            },
-                          });
-                          e.target.value = '';
-                        }
-                      }}
+                      placeholder="City (e.g. Los Angeles)"
+                      value={locationForm.city}
+                      onChange={(e) => setLocationForm({ ...locationForm, city: e.target.value })}
+                      className="px-3 py-2 border border-gray-300 rounded-md"
                     />
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder="Sort Order"
+                      value={locationForm.sort_order}
+                      onChange={(e) => setLocationForm({ ...locationForm, sort_order: e.target.value })}
+                      className="px-3 py-2 border border-gray-300 rounded-md"
+                    />
+                    <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+                      <input
+                        type="checkbox"
+                        checked={locationForm.is_active}
+                        onChange={(e) => setLocationForm({ ...locationForm, is_active: e.target.checked })}
+                      />
+                      Active
+                    </label>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={saveLocation}
+                      disabled={savingLocation}
+                      className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
+                    >
+                      {savingLocation ? 'Saving...' : editingLocationId ? 'Update Location' : 'Add Location'}
+                    </button>
+                    {editingLocationId && (
+                      <button
+                        onClick={resetLocationForm}
+                        className="px-4 py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                      >
+                        Cancel
+                      </button>
+                    )}
                   </div>
                 </div>
-                <button
-                  onClick={() => handleSave('locations')}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-                >
-                  Save Locations
-                </button>
+
+                <div className="overflow-x-auto border rounded-lg">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">State</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">City</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sort</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {loadingLocations && (
+                        <tr>
+                          <td colSpan={5} className="px-4 py-6 text-center text-gray-500">
+                            Loading locations...
+                          </td>
+                        </tr>
+                      )}
+                      {!loadingLocations && locations.length === 0 && (
+                        <tr>
+                          <td colSpan={5} className="px-4 py-6 text-center text-gray-500">
+                            No locations found. Add one or sync from properties.
+                          </td>
+                        </tr>
+                      )}
+                      {!loadingLocations && locations.map((location) => (
+                        <tr key={location.id}>
+                          <td className="px-4 py-3 text-sm text-gray-900">{location.state}</td>
+                          <td className="px-4 py-3 text-sm text-gray-900">{location.city}</td>
+                          <td className="px-4 py-3 text-sm text-gray-600">{location.sort_order}</td>
+                          <td className="px-4 py-3 text-sm">
+                            <button
+                              onClick={() => toggleLocationActive(location)}
+                              className={`px-2 py-1 rounded text-xs ${
+                                location.is_active
+                                  ? 'bg-green-100 text-green-800'
+                                  : 'bg-gray-100 text-gray-700'
+                              }`}
+                            >
+                              {location.is_active ? 'Active' : 'Inactive'}
+                            </button>
+                          </td>
+                          <td className="px-4 py-3 text-sm">
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => editLocation(location)}
+                                className="px-2 py-1 bg-indigo-50 text-indigo-700 rounded hover:bg-indigo-100"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => deleteLocation(location.id)}
+                                className="px-2 py-1 bg-red-50 text-red-700 rounded hover:bg-red-100"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
           </div>
