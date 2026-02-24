@@ -74,7 +74,7 @@ class TourRequestNotification extends Notification implements ShouldQueue
         $mail->line('**Contact Information:**')
             ->line('Name: ' . $sender->name)
             ->line('Email: ' . $sender->email);
-        
+
         if ($sender->phone) {
             $mail->line('Phone: ' . $sender->phone);
         }

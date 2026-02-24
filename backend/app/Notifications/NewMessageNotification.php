@@ -39,7 +39,7 @@ class NewMessageNotification extends Notification implements ShouldQueue
     {
         $sender = $this->message->sender;
         $property = $this->message->property;
-        
+
         $mail = (new MailMessage)
             ->subject($this->message->subject ?? 'New Message from ' . $sender->name)
             ->greeting('Hello ' . $notifiable->name . '!')
