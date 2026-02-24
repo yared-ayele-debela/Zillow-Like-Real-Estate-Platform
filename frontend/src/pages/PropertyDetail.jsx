@@ -87,7 +87,7 @@ const PropertyDetail = () => {
         <div className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded">
           {error || 'Property not found'}
         </div>
-        <Link to="/properties" className="mt-4 text-luxury-gold hover:text-luxury-gold">
+        <Link to="/properties" className="mt-4 text-indigo-600 hover:text-indigo-600">
           ← Back to Properties
         </Link>
       </div>
@@ -104,13 +104,13 @@ const PropertyDetail = () => {
   const isOwner = isAuthenticated && user?.id === property.user_id;
 
   return (
-    <div className="min-h-screen bg-luxury-charcoal">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-luxury-navy border-b">
+      <div className="bg-white border-b">
         <div className="container mx-auto px-4 py-4">
           <Link
             to="/properties"
-            className="text-luxury-gold hover:text-luxury-gold inline-flex items-center"
+            className="text-indigo-600 hover:text-indigo-600 inline-flex items-center"
           >
             ← Back to Properties
           </Link>
@@ -134,23 +134,23 @@ const PropertyDetail = () => {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
             {/* Title and Price */}
-            <div className="bg-luxury-navy rounded-lg shadow p-6">
-              <h1 className="text-3xl font-bold text-luxury-warm mb-2">{property.title}</h1>
-              <div className="flex items-center text-luxury-warm/70 mb-4">
+            <div className="bg-white rounded-lg shadow p-6">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">{property.title}</h1>
+              <div className="flex items-center text-gray-600 mb-4">
                 <MapPinIcon className="w-5 h-5 mr-2" />
                 <span>
                   {property.address}, {property.city}, {property.state} {property.zip_code}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-4xl font-bold text-luxury-gold">
+                <span className="text-4xl font-bold text-indigo-600">
                   {property.formatted_price || `$${Number(property.price).toLocaleString()}`}
                 </span>
                 <div className="flex gap-2">
-                  <span className="px-3 py-1 bg-luxury-navy text-luxury-warm/80 rounded text-sm capitalize">
+                  <span className="px-3 py-1 bg-white text-gray-700 rounded text-sm capitalize">
                     {property.status.replace('_', ' ')}
                   </span>
-                  <span className="px-3 py-1 bg-indigo-100 text-luxury-gold rounded text-sm capitalize">
+                  <span className="px-3 py-1 bg-indigo-100 text-indigo-600 rounded text-sm capitalize">
                     {property.property_type}
                   </span>
                 </div>
@@ -158,18 +158,18 @@ const PropertyDetail = () => {
             </div>
 
             {/* Description */}
-            <div className="bg-luxury-navy rounded-lg shadow p-6">
+            <div className="bg-white rounded-lg shadow p-6">
               <h2 className="text-xl font-semibold mb-4">Description</h2>
-              <p className="text-luxury-warm/80 whitespace-pre-line">{property.description}</p>
+              <p className="text-gray-700 whitespace-pre-line">{property.description}</p>
             </div>
 
             {/* Property Details */}
-            <div className="bg-luxury-navy rounded-lg shadow p-6">
+            <div className="bg-white rounded-lg shadow p-6">
               <h2 className="text-xl font-semibold mb-4">Property Details</h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                 {property.bedrooms && (
                   <div>
-                    <div className="flex items-center text-luxury-warm/70 mb-1">
+                    <div className="flex items-center text-gray-600 mb-1">
                       <HomeIcon className="w-5 h-5 mr-2" />
                       <span className="text-sm">Bedrooms</span>
                     </div>
@@ -178,7 +178,7 @@ const PropertyDetail = () => {
                 )}
                 {property.bathrooms && (
                   <div>
-                    <div className="flex items-center text-luxury-warm/70 mb-1">
+                    <div className="flex items-center text-gray-600 mb-1">
                       <Square3Stack3DIcon className="w-5 h-5 mr-2" />
                       <span className="text-sm">Bathrooms</span>
                     </div>
@@ -187,7 +187,7 @@ const PropertyDetail = () => {
                 )}
                 {property.square_feet && (
                   <div>
-                    <div className="flex items-center text-luxury-warm/70 mb-1">
+                    <div className="flex items-center text-gray-600 mb-1">
                       <Square3Stack3DIcon className="w-5 h-5 mr-2" />
                       <span className="text-sm">Square Feet</span>
                     </div>
@@ -198,7 +198,7 @@ const PropertyDetail = () => {
                 )}
                 {property.year_built && (
                   <div>
-                    <div className="flex items-center text-luxury-warm/70 mb-1">
+                    <div className="flex items-center text-gray-600 mb-1">
                       <CalendarIcon className="w-5 h-5 mr-2" />
                       <span className="text-sm">Year Built</span>
                     </div>
@@ -208,7 +208,7 @@ const PropertyDetail = () => {
               </div>
               {property.lot_size && (
                 <div className="mt-4 pt-4 border-t">
-                  <span className="text-sm text-luxury-warm/70">Lot Size: </span>
+                  <span className="text-sm text-gray-600">Lot Size: </span>
                   <span className="font-semibold">
                     {Number(property.lot_size).toLocaleString()} sq ft
                   </span>
@@ -218,15 +218,15 @@ const PropertyDetail = () => {
 
             {/* Amenities */}
             {property.amenities && property.amenities.length > 0 && (
-              <div className="bg-luxury-navy rounded-lg shadow p-6">
+              <div className="bg-white rounded-lg shadow p-6">
                 <h2 className="text-xl font-semibold mb-4">Amenities</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {property.amenities.map((amenity) => (
                     <div
                       key={amenity.id}
-                      className="flex items-center p-2 bg-luxury-charcoal rounded"
+                      className="flex items-center p-2 bg-gray-50 rounded"
                     >
-                      <span className="text-sm text-luxury-warm/80">{amenity.name}</span>
+                      <span className="text-sm text-gray-700">{amenity.name}</span>
                     </div>
                   ))}
                 </div>
@@ -240,11 +240,11 @@ const PropertyDetail = () => {
 
             {/* Map */}
             {property.latitude && property.longitude && (
-              <div className="bg-luxury-navy rounded-lg shadow p-6">
+              <div className="bg-white rounded-lg shadow p-6">
                 <h2 className="text-xl font-semibold mb-4">Location</h2>
                 <div className="h-64 bg-gray-200 rounded flex items-center justify-center">
                   {/* TODO: Integrate Mapbox or Google Maps */}
-                  <p className="text-luxury-warm/60">
+                  <p className="text-gray-500">
                     Map will be displayed here (Mapbox integration needed)
                   </p>
                 </div>
@@ -271,7 +271,7 @@ const PropertyDetail = () => {
                 {isAuthenticated && (
                   <button
                     onClick={() => setShowReviewForm(true)}
-                    className="px-4 py-2 bg-luxury-gold text-luxury-navy rounded-md hover:bg-luxury-gold"
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-600"
                   >
                     Write a Review
                   </button>
@@ -289,15 +289,15 @@ const PropertyDetail = () => {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Contact Card */}
-            <div className="bg-luxury-navy rounded-lg shadow p-6">
+            <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-semibold mb-4">Contact Information</h3>
               {property.user && (
                 <div className="space-y-2 mb-4">
-                  <Link to={`/agents/${property.user.id}`} className="font-medium text-luxury-gold hover:text-luxury-gold">
+                  <Link to={`/agents/${property.user.id}`} className="font-medium text-indigo-600 hover:text-indigo-600">
                     {property.user.name}
                   </Link>
-                  {property.user.phone && <p className="text-sm text-luxury-warm/70">{property.user.phone}</p>}
-                  <p className="text-sm text-luxury-warm/70">{property.user.email}</p>
+                  {property.user.phone && <p className="text-sm text-gray-600">{property.user.phone}</p>}
+                  <p className="text-sm text-gray-600">{property.user.email}</p>
                 </div>
               )}
 
@@ -305,13 +305,13 @@ const PropertyDetail = () => {
                 <div className="space-y-2">
                   <button
                     onClick={() => setShowContactForm(true)}
-                    className="w-full bg-luxury-gold text-luxury-navy py-2 px-4 rounded-md hover:bg-luxury-gold"
+                    className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-600"
                   >
                     Contact Agent
                   </button>
                   <button
                     onClick={() => setShowTourRequestForm(true)}
-                    className="w-full bg-luxury-emerald text-luxury-navy py-2 px-4 rounded-md hover:bg-green-700"
+                    className="w-full bg-emerald-600 text-white py-2 px-4 rounded-md hover:bg-green-700"
                   >
                     Request Tour
                   </button>
@@ -320,41 +320,41 @@ const PropertyDetail = () => {
                 <div className="space-y-2">
                   <Link
                     to={`/properties/${property.id}/edit`}
-                    className="block w-full bg-luxury-gold text-luxury-navy py-2 px-4 rounded-md hover:bg-luxury-gold text-center"
+                    className="block w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-600 text-center"
                   >
                     Edit Property
                   </Link>
                 </div>
               ) : (
-                <p className="text-sm text-luxury-warm/70">
-                  Please <Link to="/login" className="text-luxury-gold">login</Link> to contact
+                <p className="text-sm text-gray-600">
+                  Please <Link to="/login" className="text-indigo-600">login</Link> to contact
                   the agent
                 </p>
               )}
             </div>
 
             {/* Property Stats */}
-            <div className="bg-luxury-navy rounded-lg shadow p-6">
+            <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-semibold mb-4">Property Stats</h3>
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-luxury-warm/70">Views</span>
+                  <span className="text-gray-600">Views</span>
                   <span className="font-semibold">{stats.views || property.views || 0}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-luxury-warm/70">Saves</span>
+                  <span className="text-gray-600">Saves</span>
                   <span className="font-semibold">{stats.saves || property.saves || 0}</span>
                 </div>
                 {stats.average_rating > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-luxury-warm/70">Rating</span>
+                    <span className="text-gray-600">Rating</span>
                     <span className="font-semibold">
                       {stats.average_rating} / 5.0 ({stats.reviews_count} reviews)
                     </span>
                   </div>
                 )}
                 <div className="flex justify-between">
-                  <span className="text-luxury-warm/70">Listed</span>
+                  <span className="text-gray-600">Listed</span>
                   <span className="font-semibold">
                     {new Date(property.created_at).toLocaleDateString()}
                   </span>

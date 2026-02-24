@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   PlusIcon,
@@ -21,11 +21,7 @@ const MyProperties = () => {
   });
   const [pagination, setPagination] = useState({});
 
-  useEffect(() => {
-    fetchProperties();
-  }, [filters]);
-
-  const fetchProperties = async () => {
+  const fetchProperties = useCallback(async () => {
     try {
       setLoading(true);
       const params = {};
@@ -47,7 +43,11 @@ const MyProperties = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
+
+  useEffect(() => {
+    fetchProperties();
+  }, [fetchProperties]);
 
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this property?')) {
@@ -74,10 +74,10 @@ const MyProperties = () => {
   if (loading && properties.length === 0) {
     return (
       <AgentLayout>
-        <div className="min-h-[calc(100vh-4rem)] bg-luxury-charcoal flex items-center justify-center">
+        <div className="min-h-[calc(100vh-4rem)] bg-gray-50 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-            <p className="mt-4 text-luxury-warm/70">Loading properties...</p>
+            <p className="mt-4 text-gray-600">Loading properties...</p>
           </div>
         </div>
       </AgentLayout>
@@ -86,17 +86,17 @@ const MyProperties = () => {
 
   return (
     <AgentLayout>
-      <div className="min-h-[calc(100vh-4rem)] bg-luxury-charcoal">
+      <div className="min-h-[calc(100vh-4rem)] bg-gray-50">
         <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-luxury-warm">My Properties</h1>
-            <p className="mt-2 text-luxury-warm/70">Manage your property listings</p>
+            <h1 className="text-3xl font-bold text-gray-900">My Properties</h1>
+            <p className="mt-2 text-gray-600">Manage your property listings</p>
           </div>
           <Link
             to="/properties/new"
-            className="flex items-center gap-2 px-4 py-2 bg-luxury-gold text-luxury-navy rounded-md hover:bg-luxury-gold"
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-600"
           >
             <PlusIcon className="h-5 w-5" />
             Add New Property
@@ -104,24 +104,24 @@ const MyProperties = () => {
         </div>
 
         {/* Filters */}
-        <div className="bg-luxury-navy rounded-lg shadow p-6 mb-6">
+        <div className="bg-white rounded-lg shadow p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-luxury-warm/80 mb-1">Search</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
               <input
                 type="text"
                 value={filters.search}
                 onChange={(e) => setFilters({ ...filters, search: e.target.value })}
                 placeholder="Search properties..."
-                className="w-full px-3 py-2 border border-luxury-gold/30 rounded-md"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-luxury-warm/80 mb-1">Status</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
               <select
                 value={filters.status}
                 onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-                className="w-full px-3 py-2 border border-luxury-gold/30 rounded-md"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
               >
                 <option value="">All Statuses</option>
                 <option value="for_sale">For Sale</option>
@@ -131,11 +131,11 @@ const MyProperties = () => {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-luxury-warm/80 mb-1">Approval Status</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Approval Status</label>
               <select
                 value={filters.is_approved}
                 onChange={(e) => setFilters({ ...filters, is_approved: e.target.value })}
-                className="w-full px-3 py-2 border border-luxury-gold/30 rounded-md"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
               >
                 <option value="">All</option>
                 <option value="true">Approved</option>
@@ -153,44 +153,44 @@ const MyProperties = () => {
         )}
 
         {properties.length === 0 ? (
-          <div className="bg-luxury-navy rounded-lg shadow p-12 text-center">
-            <p className="text-luxury-warm/60 mb-4">No properties found</p>
+          <div className="bg-white rounded-lg shadow p-12 text-center">
+            <p className="text-gray-500 mb-4">No properties found</p>
             <Link
               to="/properties/new"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-luxury-gold text-luxury-navy rounded-md hover:bg-luxury-gold"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-600"
             >
               <PlusIcon className="h-5 w-5" />
               Add Your First Property
             </Link>
           </div>
         ) : (
-          <div className="bg-luxury-navy rounded-lg shadow overflow-hidden">
+          <div className="bg-white rounded-lg shadow overflow-hidden">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-luxury-charcoal">
+              <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-luxury-warm/60 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Property
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-luxury-warm/60 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-luxury-warm/60 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Price
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-luxury-warm/60 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Views
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-luxury-warm/60 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Saves
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-luxury-warm/60 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-luxury-navy divide-y divide-gray-200">
+              <tbody className="bg-white divide-y divide-gray-200">
                 {properties.map((property) => (
-                  <tr key={property.id} className="hover:bg-luxury-charcoal">
+                  <tr key={property.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         {property.primary_image && (
@@ -203,11 +203,11 @@ const MyProperties = () => {
                         <div>
                           <Link
                             to={`/properties/${property.id}`}
-                            className="text-sm font-medium text-luxury-warm hover:text-luxury-gold"
+                            className="text-sm font-medium text-gray-900 hover:text-indigo-600"
                           >
                             {property.title}
                           </Link>
-                          <p className="text-sm text-luxury-warm/60">
+                          <p className="text-sm text-gray-500">
                             {property.address}, {property.city}
                           </p>
                         </div>
@@ -218,11 +218,11 @@ const MyProperties = () => {
                         <span
                           className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                             property.status === 'for_sale'
-                              ? 'bg-luxury-emerald/20 text-luxury-emerald'
+                              ? 'bg-emerald-100 text-emerald-700'
                               : property.status === 'for_rent'
                               ? 'bg-blue-100 text-blue-800'
                               : property.status === 'sold'
-                              ? 'bg-luxury-navy text-luxury-warm'
+                              ? 'bg-white text-gray-900'
                               : 'bg-yellow-100 text-yellow-800'
                           }`}
                         >
@@ -235,27 +235,27 @@ const MyProperties = () => {
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-luxury-warm">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       ${property.price?.toLocaleString()}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-luxury-warm/60">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {property.views || 0}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-luxury-warm/60">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {property.saves || 0}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center gap-2">
                         <Link
                           to={`/properties/${property.id}`}
-                          className="text-luxury-gold hover:text-luxury-gold"
+                          className="text-indigo-600 hover:text-indigo-600"
                           title="View"
                         >
                           <EyeIcon className="h-5 w-5" />
                         </Link>
                         <Link
                           to={`/properties/${property.id}/edit`}
-                          className="text-luxury-warm/70 hover:text-luxury-warm"
+                          className="text-gray-600 hover:text-gray-900"
                           title="Edit"
                         >
                           <PencilIcon className="h-5 w-5" />
@@ -277,7 +277,7 @@ const MyProperties = () => {
                         <select
                           value={property.status}
                           onChange={(e) => handleStatusChange(property.id, e.target.value)}
-                          className="text-xs border border-luxury-gold/30 rounded px-2 py-1"
+                          className="text-xs border border-gray-300 rounded px-2 py-1"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <option value="for_sale">For Sale</option>
@@ -306,8 +306,8 @@ const MyProperties = () => {
                 }}
                 className={`px-4 py-2 border rounded ${
                   pagination.current_page === page
-                    ? 'bg-luxury-gold text-luxury-navy'
-                    : 'hover:bg-luxury-charcoal'
+                    ? 'bg-indigo-600 text-white'
+                    : 'hover:bg-gray-50'
                 }`}
               >
                 {page}

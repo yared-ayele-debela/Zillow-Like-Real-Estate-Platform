@@ -1,6 +1,12 @@
 import api from './api';
 
 export const propertyService = {
+  // Get filter options (includes amenities grouped by category)
+  getFilterOptions: async () => {
+    const response = await api.get('/search/filter-options');
+    return response.data;
+  },
+
   // Get all properties with filters
   getProperties: async (params = {}) => {
     const response = await api.get('/properties', { params });

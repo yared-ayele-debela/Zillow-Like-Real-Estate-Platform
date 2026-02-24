@@ -16,6 +16,7 @@ const PropertyForm = ({ property: propData = null, isEdit = false }) => {
   const [availableAmenities, setAvailableAmenities] = useState([]);
   const [error, setError] = useState('');
   const [loadingProperty, setLoadingProperty] = useState(false);
+  const [loadingAmenities, setLoadingAmenities] = useState(false);
 
   const property = propData || currentProperty;
   const isEditing = isEdit || !!id;
@@ -62,9 +63,26 @@ const PropertyForm = ({ property: propData = null, isEdit = false }) => {
       setImages(property.images || []);
       setAmenities(property.amenities?.map((a) => a.id) || []);
     }
-    // TODO: Fetch available amenities from API
-    setAvailableAmenities([]);
   }, [property]);
+
+  useEffect(() => {
+    const fetchAmenities = async () => {
+      try {
+        setLoadingAmenities(true);
+        const filterOptions = await propertyService.getFilterOptions();
+        const groupedAmenities = filterOptions?.amenities || {};
+        const flattenedAmenities = Object.values(groupedAmenities).flat();
+        setAvailableAmenities(flattenedAmenities);
+      } catch (err) {
+        console.error('Failed to load amenities:', err);
+        setAvailableAmenities([]);
+      } finally {
+        setLoadingAmenities(false);
+      }
+    };
+
+    fetchAmenities();
+  }, []);
 
   const onSubmit = async (data) => {
     setError('');
@@ -120,7 +138,7 @@ const PropertyForm = ({ property: propData = null, isEdit = false }) => {
   return (
     <AgentLayout>
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-luxury-warm mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">
           {isEditing ? 'Edit Property' : 'Create New Property'}
         </h1>
 
@@ -131,12 +149,12 @@ const PropertyForm = ({ property: propData = null, isEdit = false }) => {
             <div
               key={step}
               className={`flex-1 h-2 mx-1 rounded ${
-                step <= currentStep ? 'bg-luxury-gold' : 'bg-gray-200'
+                step <= currentStep ? 'bg-indigo-600' : 'bg-gray-200'
               }`}
             />
           ))}
         </div>
-        <p className="text-sm text-luxury-warm/70 text-center">
+        <p className="text-sm text-gray-600 text-center">
           Step {currentStep} of {totalSteps}
         </p>
       </div>
@@ -150,17 +168,17 @@ const PropertyForm = ({ property: propData = null, isEdit = false }) => {
         <form onSubmit={handleSubmit(onSubmit)}>
         {/* Step 1: Basic Info */}
         {currentStep === 1 && (
-          <div className="bg-luxury-navy rounded-lg shadow p-6 space-y-6">
+          <div className="bg-white rounded-lg shadow p-6 space-y-6">
             <h2 className="text-xl font-semibold mb-4">Basic Information</h2>
 
             <div>
-              <label className="block text-sm font-medium text-luxury-warm/80 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Title *
               </label>
               <input
                 {...register('title', { required: 'Title is required' })}
                 type="text"
-                className="w-full px-3 py-2 border border-luxury-gold/30 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                 placeholder="Beautiful 3 Bedroom House"
               />
               {errors.title && (
@@ -169,7 +187,7 @@ const PropertyForm = ({ property: propData = null, isEdit = false }) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-luxury-warm/80 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Description *
               </label>
               <textarea
@@ -181,7 +199,7 @@ const PropertyForm = ({ property: propData = null, isEdit = false }) => {
                   },
                 })}
                 rows={6}
-                className="w-full px-3 py-2 border border-luxury-gold/30 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                 placeholder="Describe your property in detail..."
               />
               {errors.description && (
@@ -191,12 +209,12 @@ const PropertyForm = ({ property: propData = null, isEdit = false }) => {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-luxury-warm/80 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Property Type *
                 </label>
                 <select
                   {...register('property_type', { required: true })}
-                  className="w-full px-3 py-2 border border-luxury-gold/30 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                 >
                   <option value="house">House</option>
                   <option value="apartment">Apartment</option>
@@ -207,12 +225,12 @@ const PropertyForm = ({ property: propData = null, isEdit = false }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-luxury-warm/80 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Status *
                 </label>
                 <select
                   {...register('status', { required: true })}
-                  className="w-full px-3 py-2 border border-luxury-gold/30 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                 >
                   <option value="for_sale">For Sale</option>
                   <option value="for_rent">For Rent</option>
@@ -223,7 +241,7 @@ const PropertyForm = ({ property: propData = null, isEdit = false }) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-luxury-warm/80 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Price *
               </label>
               <input
@@ -233,7 +251,7 @@ const PropertyForm = ({ property: propData = null, isEdit = false }) => {
                 })}
                 type="number"
                 step="0.01"
-                className="w-full px-3 py-2 border border-luxury-gold/30 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                 placeholder="500000"
               />
               {errors.price && (
@@ -245,17 +263,17 @@ const PropertyForm = ({ property: propData = null, isEdit = false }) => {
 
         {/* Step 2: Location */}
         {currentStep === 2 && (
-          <div className="bg-luxury-navy rounded-lg shadow p-6 space-y-6">
+          <div className="bg-white rounded-lg shadow p-6 space-y-6">
             <h2 className="text-xl font-semibold mb-4">Location</h2>
 
             <div>
-              <label className="block text-sm font-medium text-luxury-warm/80 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Address *
               </label>
               <input
                 {...register('address', { required: 'Address is required' })}
                 type="text"
-                className="w-full px-3 py-2 border border-luxury-gold/30 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                 placeholder="123 Main Street"
               />
               {errors.address && (
@@ -265,13 +283,13 @@ const PropertyForm = ({ property: propData = null, isEdit = false }) => {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-luxury-warm/80 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   City *
                 </label>
                 <input
                   {...register('city', { required: 'City is required' })}
                   type="text"
-                  className="w-full px-3 py-2 border border-luxury-gold/30 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                   placeholder="New York"
                 />
                 {errors.city && (
@@ -280,13 +298,13 @@ const PropertyForm = ({ property: propData = null, isEdit = false }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-luxury-warm/80 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   State *
                 </label>
                 <input
                   {...register('state', { required: 'State is required' })}
                   type="text"
-                  className="w-full px-3 py-2 border border-luxury-gold/30 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                   placeholder="NY"
                 />
                 {errors.state && (
@@ -297,13 +315,13 @@ const PropertyForm = ({ property: propData = null, isEdit = false }) => {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-luxury-warm/80 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   ZIP Code *
                 </label>
                 <input
                   {...register('zip_code', { required: 'ZIP code is required' })}
                   type="text"
-                  className="w-full px-3 py-2 border border-luxury-gold/30 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                   placeholder="10001"
                 />
                 {errors.zip_code && (
@@ -312,14 +330,14 @@ const PropertyForm = ({ property: propData = null, isEdit = false }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-luxury-warm/80 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Country
                 </label>
                 <input
                   {...register('country')}
                   type="text"
                   defaultValue="USA"
-                  className="w-full px-3 py-2 border border-luxury-gold/30 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
             </div>
@@ -328,24 +346,24 @@ const PropertyForm = ({ property: propData = null, isEdit = false }) => {
 
         {/* Step 3: Details */}
         {currentStep === 3 && (
-          <div className="bg-luxury-navy rounded-lg shadow p-6 space-y-6">
+          <div className="bg-white rounded-lg shadow p-6 space-y-6">
             <h2 className="text-xl font-semibold mb-4">Property Details</h2>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-luxury-warm/80 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Bedrooms
                 </label>
                 <input
                   {...register('bedrooms', { min: 0 })}
                   type="number"
                   min="0"
-                  className="w-full px-3 py-2 border border-luxury-gold/30 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-luxury-warm/80 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Bathrooms
                 </label>
                 <input
@@ -353,26 +371,26 @@ const PropertyForm = ({ property: propData = null, isEdit = false }) => {
                   type="number"
                   min="0"
                   step="0.5"
-                  className="w-full px-3 py-2 border border-luxury-gold/30 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-luxury-warm/80 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Square Feet
                 </label>
                 <input
                   {...register('square_feet', { min: 0 })}
                   type="number"
                   min="0"
-                  className="w-full px-3 py-2 border border-luxury-gold/30 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-luxury-warm/80 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Year Built
                 </label>
                 <input
@@ -383,20 +401,20 @@ const PropertyForm = ({ property: propData = null, isEdit = false }) => {
                   type="number"
                   min="1800"
                   max={new Date().getFullYear()}
-                  className="w-full px-3 py-2 border border-luxury-gold/30 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-luxury-warm/80 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Lot Size (sq ft)
               </label>
               <input
                 {...register('lot_size', { min: 0 })}
                 type="number"
                 min="0"
-                className="w-full px-3 py-2 border border-luxury-gold/30 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
           </div>
@@ -404,11 +422,15 @@ const PropertyForm = ({ property: propData = null, isEdit = false }) => {
 
         {/* Step 4: Amenities */}
         {currentStep === 4 && (
-          <div className="bg-luxury-navy rounded-lg shadow p-6 space-y-6">
+          <div className="bg-white rounded-lg shadow p-6 space-y-6">
             <h2 className="text-xl font-semibold mb-4">Amenities</h2>
 
-            {availableAmenities.length === 0 ? (
-              <div className="text-center py-8 text-luxury-warm/60">
+            {loadingAmenities ? (
+              <div className="text-center py-8 text-gray-500">
+                <p>Loading amenities...</p>
+              </div>
+            ) : availableAmenities.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
                 <p>No amenities available. Please add amenities in the admin panel.</p>
               </div>
             ) : (
@@ -416,15 +438,15 @@ const PropertyForm = ({ property: propData = null, isEdit = false }) => {
                 {availableAmenities.map((amenity) => (
                   <label
                     key={amenity.id}
-                    className="flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-luxury-charcoal"
+                    className="flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50"
                   >
                     <input
                       type="checkbox"
                       checked={amenities.includes(amenity.id)}
                       onChange={() => handleAmenityToggle(amenity.id)}
-                      className="rounded border-luxury-gold/30 text-luxury-gold focus:ring-indigo-500"
+                      className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                     />
-                    <span className="text-sm text-luxury-warm/80">{amenity.name}</span>
+                    <span className="text-sm text-gray-700">{amenity.name}</span>
                   </label>
                 ))}
               </div>
@@ -434,9 +456,9 @@ const PropertyForm = ({ property: propData = null, isEdit = false }) => {
 
         {/* Step 5: Images */}
         {currentStep === 5 && (
-          <div className="bg-luxury-navy rounded-lg shadow p-6 space-y-6">
+          <div className="bg-white rounded-lg shadow p-6 space-y-6">
             <h2 className="text-xl font-semibold mb-4">Property Images</h2>
-            <p className="text-sm text-luxury-warm/70 mb-4">
+            <p className="text-sm text-gray-600 mb-4">
               Upload at least one image. The first image will be set as primary.
             </p>
 
@@ -453,7 +475,7 @@ const PropertyForm = ({ property: propData = null, isEdit = false }) => {
             type="button"
             onClick={prevStep}
             disabled={currentStep === 1}
-            className="px-6 py-2 border border-luxury-gold/30 rounded-md text-luxury-warm/80 hover:bg-luxury-charcoal disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Previous
           </button>
@@ -462,7 +484,7 @@ const PropertyForm = ({ property: propData = null, isEdit = false }) => {
             <button
               type="button"
               onClick={nextStep}
-              className="px-6 py-2 bg-luxury-gold text-luxury-navy rounded-md hover:bg-luxury-gold"
+              className="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-600"
             >
               Next
             </button>
@@ -470,7 +492,7 @@ const PropertyForm = ({ property: propData = null, isEdit = false }) => {
             <button
               type="submit"
               disabled={isLoading}
-              className="px-6 py-2 bg-luxury-gold text-luxury-navy rounded-md hover:bg-luxury-gold disabled:opacity-50"
+              className="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-600 disabled:opacity-50"
             >
               {isLoading ? 'Saving...' : isEditing ? 'Update Property' : 'Create Property'}
             </button>

@@ -142,23 +142,23 @@ const PropertyList = () => {
   return (
     <div className="container-fluid mx-auto px-4 py-8">
       {/* Horizontal Filters + Header */}
-      <div className="mb-6 rounded-lg border border-luxury-gold/20 bg-white px-4 py-4">
+      <div className="mb-6 rounded-lg border border-gray-200 bg-white px-4 py-4">
         <div className="flex flex-wrap justify-between items-center gap-3">
           <div className="flex items-center gap-4">
-            <h2 className="text-2xl font-bold text-luxury-warm">
+            <h2 className="text-2xl font-bold text-gray-900">
               Properties ({pagination.total})
             </h2>
             <div className="flex gap-2">
               <button
                 onClick={clearAllFilters}
-                className="px-4 py-2 border border-luxury-gold/30 rounded-md hover:bg-luxury-charcoal text-sm font-medium text-luxury-warm/80"
+                className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-sm font-medium text-gray-700"
               >
                 Clear Filters
               </button>
               {isAuthenticated && searchParams.toString() && (
                 <button
                   onClick={() => setShowSaveSearch(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-luxury-gold text-luxury-navy rounded-md hover:bg-luxury-gold text-sm font-medium"
+                  className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-600 text-sm font-medium"
                 >
                   Save Search
                 </button>
@@ -171,8 +171,8 @@ const PropertyList = () => {
               onClick={() => setViewMode('split')}
               className={`p-2 rounded ${
                 viewMode === 'split'
-                  ? 'bg-luxury-gold text-luxury-navy'
-                  : 'bg-gray-200 text-luxury-warm/80 hover:bg-gray-300'
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
               }`}
             >
               Map + List
@@ -181,8 +181,8 @@ const PropertyList = () => {
               onClick={() => setViewMode('list')}
               className={`p-2 rounded ${
                 viewMode === 'list'
-                  ? 'bg-luxury-gold text-luxury-navy'
-                  : 'bg-gray-200 text-luxury-warm/80 hover:bg-gray-300'
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
               }`}
             >
               List
@@ -201,7 +201,7 @@ const PropertyList = () => {
               params.set('page', '1');
               setSearchParams(params);
             }}
-            className="px-3 py-2 border border-luxury-gold/30 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
           >
             <option value="created_at_desc">Sort: Newest First</option>
             <option value="created_at_asc">Sort: Oldest First</option>
@@ -215,7 +215,7 @@ const PropertyList = () => {
           <select
             value={searchParams.get('property_type') || ''}
             onChange={(e) => updateFilterParam('property_type', e.target.value)}
-            className="px-3 py-2 border border-luxury-gold/30 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
           >
             <option value="">Property Type</option>
             {PROPERTY_TYPES.map((type) => (
@@ -228,7 +228,7 @@ const PropertyList = () => {
           <select
             value={searchParams.get('status') || ''}
             onChange={(e) => updateFilterParam('status', e.target.value)}
-            className="px-3 py-2 border border-luxury-gold/30 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
           >
             <option value="">Status</option>
             {STATUS_OPTIONS.map((status) => (
@@ -243,7 +243,7 @@ const PropertyList = () => {
             placeholder="Min Price"
             value={searchParams.get('min_price') || ''}
             onChange={(e) => updateFilterParam('min_price', e.target.value)}
-            className="px-3 py-2 border border-luxury-gold/30 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
           />
 
           <input
@@ -251,13 +251,13 @@ const PropertyList = () => {
             placeholder="Max Price"
             value={searchParams.get('max_price') || ''}
             onChange={(e) => updateFilterParam('max_price', e.target.value)}
-            className="px-3 py-2 border border-luxury-gold/30 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
           />
 
           <select
             value={searchParams.get('bedrooms') || ''}
             onChange={(e) => updateFilterParam('bedrooms', e.target.value)}
-            className="px-3 py-2 border border-luxury-gold/30 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
           >
             <option value="">Beds</option>
             {BED_BATH_OPTIONS.map((value) => (
@@ -270,7 +270,7 @@ const PropertyList = () => {
           <select
             value={searchParams.get('bathrooms') || ''}
             onChange={(e) => updateFilterParam('bathrooms', e.target.value)}
-            className="px-3 py-2 border border-luxury-gold/30 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
           >
             <option value="">Baths</option>
             {BED_BATH_OPTIONS.map((value) => (
@@ -287,7 +287,7 @@ const PropertyList = () => {
             placeholder="City"
             value={searchParams.get('city') || ''}
             onChange={(e) => updateFilterParam('city', e.target.value)}
-            className="px-3 py-2 border border-luxury-gold/30 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
           />
 
           <input
@@ -295,7 +295,7 @@ const PropertyList = () => {
             placeholder="State"
             value={searchParams.get('state') || ''}
             onChange={(e) => updateFilterParam('state', e.target.value)}
-            className="px-3 py-2 border border-luxury-gold/30 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
           />
 
           <input
@@ -303,7 +303,7 @@ const PropertyList = () => {
             placeholder="Min Sq Ft"
             value={searchParams.get('min_square_feet') || ''}
             onChange={(e) => updateFilterParam('min_square_feet', e.target.value)}
-            className="px-3 py-2 border border-luxury-gold/30 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
           />
 
           <input
@@ -311,7 +311,7 @@ const PropertyList = () => {
             placeholder="Max Sq Ft"
             value={searchParams.get('max_square_feet') || ''}
             onChange={(e) => updateFilterParam('max_square_feet', e.target.value)}
-            className="px-3 py-2 border border-luxury-gold/30 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
           />
 
           <input
@@ -319,7 +319,7 @@ const PropertyList = () => {
             placeholder="Min Year"
             value={searchParams.get('min_year_built') || ''}
             onChange={(e) => updateFilterParam('min_year_built', e.target.value)}
-            className="px-3 py-2 border border-luxury-gold/30 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
           />
 
           <input
@@ -327,12 +327,12 @@ const PropertyList = () => {
             placeholder="Max Year"
             value={searchParams.get('max_year_built') || ''}
             onChange={(e) => updateFilterParam('max_year_built', e.target.value)}
-            className="px-3 py-2 border border-luxury-gold/30 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
           />
         </div>
 
         <div className="mt-3 flex flex-wrap items-center gap-3">
-          <span className="text-sm font-medium text-luxury-warm/80">Featured</span>
+          <span className="text-sm font-medium text-gray-700">Featured</span>
           <button
             type="button"
             onClick={() =>
@@ -353,7 +353,7 @@ const PropertyList = () => {
               }`}
             />
           </button>
-          <span className="text-sm text-luxury-warm/60">
+          <span className="text-sm text-gray-500">
             {searchParams.get('featured') === 'true' ? 'Featured only' : 'All listings'}
           </span>
         </div>
@@ -379,7 +379,7 @@ const PropertyList = () => {
                       params.delete(key);
                       setSearchParams(params);
                     }}
-                    className="ml-2 text-luxury-gold hover:text-luxury-gold"
+                    className="ml-2 text-indigo-600 hover:text-indigo-600"
                   >
                     ×
                   </button>
@@ -403,8 +403,8 @@ const PropertyList = () => {
 
       {properties.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-luxury-warm/60 text-lg">No properties found</p>
-          <p className="text-luxury-warm/50 mt-2">Try adjusting your filters</p>
+          <p className="text-gray-500 text-lg">No properties found</p>
+          <p className="text-gray-400 mt-2">Try adjusting your filters</p>
         </div>
       ) : (
         <>
@@ -483,7 +483,7 @@ const PropertyList = () => {
               <button
                 onClick={() => handlePageChange(pagination.current_page - 1)}
                 disabled={pagination.current_page === 1}
-                className="px-4 py-2 border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-luxury-charcoal"
+                className="px-4 py-2 border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
               >
                 Previous
               </button>
@@ -505,8 +505,8 @@ const PropertyList = () => {
                       onClick={() => handlePageChange(page)}
                       className={`px-4 py-2 border rounded ${
                         pagination.current_page === page
-                          ? 'bg-luxury-gold text-luxury-navy'
-                          : 'hover:bg-luxury-charcoal'
+                          ? 'bg-indigo-600 text-white'
+                          : 'hover:bg-gray-50'
                       }`}
                     >
                       {page}
@@ -517,7 +517,7 @@ const PropertyList = () => {
               <button
                 onClick={() => handlePageChange(pagination.current_page + 1)}
                 disabled={pagination.current_page === pagination.last_page}
-                className="px-4 py-2 border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-luxury-charcoal"
+                className="px-4 py-2 border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
               >
                 Next
               </button>
