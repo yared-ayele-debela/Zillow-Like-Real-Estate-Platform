@@ -64,6 +64,48 @@ const adminService = {
     const response = await api.post(`/admin/reviews/${id}/reject`);
     return response.data;
   },
+
+  // Location Management
+  getLocations: async (params = {}) => {
+    const response = await api.get('/admin/locations', { params });
+    return response.data;
+  },
+
+  createLocation: async (payload) => {
+    const response = await api.post('/admin/locations', payload);
+    return response.data;
+  },
+
+  updateLocation: async (id, payload) => {
+    const response = await api.put(`/admin/locations/${id}`, payload);
+    return response.data;
+  },
+
+  deleteLocation: async (id) => {
+    const response = await api.delete(`/admin/locations/${id}`);
+    return response.data;
+  },
+
+  syncLocations: async () => {
+    const response = await api.post('/admin/locations/sync');
+    return response.data;
+  },
+
+  // Site & Email Settings
+  getSettings: async () => {
+    const response = await api.get('/admin/settings');
+    return response.data;
+  },
+
+  updateSiteSettings: async (payload) => {
+    const response = await api.put('/admin/settings/site', payload);
+    return response.data;
+  },
+
+  updateEmailSettings: async (payload) => {
+    const response = await api.put('/admin/settings/email', payload);
+    return response.data;
+  },
 };
 
 export default adminService;
