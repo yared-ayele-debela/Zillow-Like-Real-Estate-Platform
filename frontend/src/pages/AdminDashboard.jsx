@@ -8,24 +8,46 @@ import {
   EnvelopeIcon,
   ChartBarIcon,
 } from '@heroicons/react/24/outline';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import adminService from '../services/adminService';
 import AdminLayout from '../components/admin/AdminLayout';
 
 const AdminDashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);
+  const [advancedReport, setAdvancedReport] = useState(null);
+  const [reportFilters, setReportFilters] = useState({
+    start_date: '',
+    end_date: '',
+    group_by: 'day',
+  });
+  const [loadingReport, setLoadingReport] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetchDashboard();
+    const today = new Date();
+    const start = new Date();
+    start.setDate(today.getDate() - 29);
+
+    const defaultFilters = {
+      start_date: start.toISOString().split('T')[0],
+      end_date: today.toISOString().split('T')[0],
+      group_by: 'day',
+    };
+
+    setReportFilters(defaultFilters);
+    fetchDashboard(defaultFilters);
   }, []);
 
-  const fetchDashboard = async () => {
+  const fetchDashboard = async (filters = reportFilters) => {
     try {
       setLoading(true);
-      const data = await adminService.getDashboard();
-      setDashboardData(data);
+      const [dashboard, report] = await Promise.all([
+        adminService.getDashboard(),
+        adminService.getAdvancedReport(filters),
+      ]);
+      setDashboardData(dashboard);
+      setAdvancedReport(report);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load dashboard');
       console.error('Dashboard error:', err);
@@ -62,6 +84,47 @@ const AdminDashboard = () => {
   }
 
   const stats = dashboardData?.statistics || {};
+  const reportKpis = advancedReport?.kpis || {};
+
+  const combinedTrendData = (() => {
+    const map = new Map();
+
+    (advancedReport?.trends?.users || []).forEach((item) => {
+      map.set(item.bucket, { bucket: item.bucket, users: Number(item.count || 0), properties: 0, messages: 0 });
+    });
+
+    (advancedReport?.trends?.properties || []).forEach((item) => {
+      const existing = map.get(item.bucket) || { bucket: item.bucket, users: 0, properties: 0, messages: 0 };
+      existing.properties = Number(item.count || 0);
+      map.set(item.bucket, existing);
+    });
+
+    (advancedReport?.trends?.messages || []).forEach((item) => {
+      const existing = map.get(item.bucket) || { bucket: item.bucket, users: 0, properties: 0, messages: 0 };
+      existing.messages = Number(item.count || 0);
+      map.set(item.bucket, existing);
+    });
+
+    return Array.from(map.values()).sort((a, b) => a.bucket.localeCompare(b.bucket));
+  })();
+
+  const applyReportFilters = async () => {
+    try {
+      setLoadingReport(true);
+      const report = await adminService.getAdvancedReport(reportFilters);
+      setAdvancedReport(report);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to load advanced report');
+    } finally {
+      setLoadingReport(false);
+    }
+  };
+
+  const growthClass = (value) => {
+    if ((value || 0) > 0) return 'text-green-600';
+    if ((value || 0) < 0) return 'text-red-600';
+    return 'text-gray-500';
+  };
 
   const statCards = [
     {
@@ -124,6 +187,145 @@ const AdminDashboard = () => {
             <ChartBarIcon className="h-5 w-5" />
             View Analytics
           </Link>
+        </div>
+
+        {/* Advanced Report */}
+        <div className="bg-white rounded-lg shadow p-6 mb-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">Advanced Report</h2>
+              <p className="text-sm text-gray-600">Filter performance by date range and trend grouping.</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 w-full md:w-auto">
+              <input
+                type="date"
+                value={reportFilters.start_date}
+                onChange={(e) => setReportFilters((prev) => ({ ...prev, start_date: e.target.value }))}
+                className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+              />
+              <input
+                type="date"
+                value={reportFilters.end_date}
+                onChange={(e) => setReportFilters((prev) => ({ ...prev, end_date: e.target.value }))}
+                className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+              />
+              <select
+                value={reportFilters.group_by}
+                onChange={(e) => setReportFilters((prev) => ({ ...prev, group_by: e.target.value }))}
+                className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+              >
+                <option value="day">Daily</option>
+                <option value="week">Weekly</option>
+                <option value="month">Monthly</option>
+              </select>
+              <button
+                onClick={applyReportFilters}
+                disabled={loadingReport}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 text-sm"
+              >
+                {loadingReport ? 'Applying...' : 'Apply'}
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="border border-gray-200 rounded-lg p-4">
+              <p className="text-sm text-gray-600">New Users</p>
+              <p className="text-2xl font-bold text-gray-900">{reportKpis.current?.new_users || 0}</p>
+              <p className={`text-xs mt-1 ${growthClass(reportKpis.growth?.new_users)}`}>
+                {reportKpis.growth?.new_users ?? 0}% vs previous period
+              </p>
+            </div>
+            <div className="border border-gray-200 rounded-lg p-4">
+              <p className="text-sm text-gray-600">New Properties</p>
+              <p className="text-2xl font-bold text-gray-900">{reportKpis.current?.new_properties || 0}</p>
+              <p className={`text-xs mt-1 ${growthClass(reportKpis.growth?.new_properties)}`}>
+                {reportKpis.growth?.new_properties ?? 0}% vs previous period
+              </p>
+            </div>
+            <div className="border border-gray-200 rounded-lg p-4">
+              <p className="text-sm text-gray-600">Revenue (Completed Payments)</p>
+              <p className="text-2xl font-bold text-gray-900">
+                ${(reportKpis.current?.revenue || 0).toLocaleString()}
+              </p>
+              <p className={`text-xs mt-1 ${growthClass(reportKpis.growth?.revenue)}`}>
+                {reportKpis.growth?.revenue ?? 0}% vs previous period
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <div className="border border-gray-200 rounded-lg p-4">
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">Trend Overview</h3>
+              {combinedTrendData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={260}>
+                  <LineChart data={combinedTrendData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="bucket" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Line type="monotone" dataKey="users" stroke="#2563EB" name="Users" />
+                    <Line type="monotone" dataKey="properties" stroke="#10B981" name="Properties" />
+                    <Line type="monotone" dataKey="messages" stroke="#F59E0B" name="Messages" />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-sm text-gray-500 py-16 text-center">No trend data in selected period.</p>
+              )}
+            </div>
+
+            <div className="border border-gray-200 rounded-lg p-4">
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">Top Locations</h3>
+              {(advancedReport?.top_locations || []).length > 0 ? (
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {advancedReport.top_locations.map((location, index) => (
+                    <div key={`${location.city}-${location.state}-${index}`} className="flex items-center justify-between text-sm">
+                      <span className="text-gray-700">{location.city}, {location.state}</span>
+                      <span className="font-semibold text-gray-900">{location.count}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500 py-16 text-center">No location data in selected period.</p>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6">
+            <div className="border border-gray-200 rounded-lg p-4">
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">Top Agents by Properties Added</h3>
+              {(advancedReport?.top_agents || []).length > 0 ? (
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {advancedReport.top_agents.map((agent) => (
+                    <div key={agent.id} className="flex items-center justify-between text-sm">
+                      <span className="text-gray-700">{agent.name}</span>
+                      <span className="font-semibold text-gray-900">{agent.properties_count}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500 py-16 text-center">No agent activity in selected period.</p>
+              )}
+            </div>
+
+            <div className="border border-gray-200 rounded-lg p-4">
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">Properties by Type</h3>
+              {(advancedReport?.properties_by_type || []).length > 0 ? (
+                <ResponsiveContainer width="100%" height={240}>
+                  <BarChart data={advancedReport.properties_by_type}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="property_type" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="count" fill="#4F46E5" />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-sm text-gray-500 py-16 text-center">No property type data in selected period.</p>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Statistics Cards */}

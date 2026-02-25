@@ -1,23 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import adminService from '../services/adminService';
 import AdminLayout from '../components/admin/AdminLayout';
 
 const AdminUsers = () => {
   const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({ role: '', is_active: '', search: '' });
-  const [pagination, setPagination] = useState({});
   const [editingUser, setEditingUser] = useState(null);
   const [editForm, setEditForm] = useState({});
 
-  useEffect(() => {
-    fetchUsers();
-  }, [filters]);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
-      setLoading(true);
       const params = {};
       if (filters.role) params.role = filters.role;
       if (filters.is_active !== '') params.is_active = filters.is_active;
@@ -25,21 +18,29 @@ const AdminUsers = () => {
 
       const data = await adminService.getUsers(params);
       setUsers(data.data || []);
-      setPagination(data);
     } catch (err) {
       console.error('Users error:', err);
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [filters]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   const handleUpdate = async (id) => {
     try {
-      await adminService.updateUser(id, editForm);
+      const payload = { ...editForm };
+      if (!payload.password) {
+        delete payload.password;
+        delete payload.password_confirmation;
+      }
+
+      await adminService.updateUser(id, payload);
       setEditingUser(null);
       fetchUsers();
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to update user');
+      const message = err.response?.data?.errors?.password?.[0] || err.response?.data?.message || 'Failed to update user';
+      alert(message);
     }
   };
 
@@ -144,7 +145,7 @@ const AdminUsers = () => {
                       <button
                         onClick={() => {
                           setEditingUser(user);
-                          setEditForm({ ...user });
+                          setEditForm({ ...user, password: '', password_confirmation: '' });
                         }}
                         className="text-indigo-600 hover:text-indigo-900"
                       >
@@ -200,6 +201,26 @@ const AdminUsers = () => {
                     <option value="admin">Admin</option>
                     <option value="guest">Guest</option>
                   </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                  <input
+                    type="password"
+                    value={editForm.password || ''}
+                    onChange={(e) => setEditForm({ ...editForm, password: e.target.value })}
+                    placeholder="Leave blank to keep current password"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+                  <input
+                    type="password"
+                    value={editForm.password_confirmation || ''}
+                    onChange={(e) => setEditForm({ ...editForm, password_confirmation: e.target.value })}
+                    placeholder="Repeat new password"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  />
                 </div>
                 <div className="flex items-center gap-4">
                   <label className="flex items-center">
