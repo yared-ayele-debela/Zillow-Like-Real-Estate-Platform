@@ -160,6 +160,8 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     // Admin Dashboard
     Route::get('/admin/dashboard', [AdminController::class, 'dashboard']);
     Route::get('/admin/analytics', [AdminController::class, 'analytics']);
+    Route::get('/admin/reports/advanced', [AdminController::class, 'advancedReport']);
+    Route::get('/admin/reports/advanced/export', [AdminController::class, 'exportAdvancedReport']);
 
     // User Management
     Route::get('/admin/users', [AdminController::class, 'users']);

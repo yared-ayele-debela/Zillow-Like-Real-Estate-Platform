@@ -7,11 +7,13 @@ use App\Models\User;
 use App\Models\Property;
 use App\Models\Review;
 use App\Models\Message;
+use App\Models\Payment;
 use App\Models\Location;
 use App\Models\AppSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class AdminController extends Controller
 {
@@ -154,6 +156,7 @@ class AdminController extends Controller
             'is_verified' => 'sometimes|boolean',
             'phone' => 'nullable|string|max:20',
             'bio' => 'nullable|string|max:1000',
+            'password' => 'nullable|string|min:8|confirmed',
         ]);
 
         if ($validator->fails()) {
@@ -164,7 +167,7 @@ class AdminController extends Controller
         }
 
         $user->update($request->only([
-            'name', 'email', 'role', 'is_active', 'is_verified', 'phone', 'bio'
+            'name', 'email', 'role', 'is_active', 'is_verified', 'phone', 'bio', 'password'
         ]));
 
         return response()->json([
@@ -760,5 +763,330 @@ class AdminController extends Controller
             'properties_by_month' => $propertiesByMonth,
             'users_by_month' => $usersByMonth,
         ]);
+    }
+
+    /**
+     * Advanced report with period filters and grouped trends.
+     */
+    public function advancedReport(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user->isAdmin()) {
+            return response()->json([
+                'message' => 'Unauthorized. Admin access required.',
+            ], 403);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'group_by' => 'nullable|in:day,week,month',
+            'top_locations' => 'nullable|integer|min:1|max:50',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $groupBy = $request->input('group_by', 'day');
+        $topLocations = (int) $request->input('top_locations', 10);
+
+        $endDate = $request->filled('end_date')
+            ? Carbon::parse($request->input('end_date'))->endOfDay()
+            : now()->endOfDay();
+        $startDate = $request->filled('start_date')
+            ? Carbon::parse($request->input('start_date'))->startOfDay()
+            : $endDate->copy()->subDays(29)->startOfDay();
+
+        $periodDays = $startDate->diffInDays($endDate) + 1;
+        $previousEndDate = $startDate->copy()->subDay()->endOfDay();
+        $previousStartDate = $previousEndDate->copy()->subDays($periodDays - 1)->startOfDay();
+
+        $current = [
+            'new_users' => User::whereBetween('created_at', [$startDate, $endDate])->count(),
+            'new_properties' => Property::whereBetween('created_at', [$startDate, $endDate])->count(),
+            'new_messages' => Message::whereBetween('created_at', [$startDate, $endDate])->count(),
+            'new_reviews' => Review::whereBetween('created_at', [$startDate, $endDate])->count(),
+            'completed_payments' => Payment::whereBetween('created_at', [$startDate, $endDate])
+                ->where('status', 'completed')
+                ->count(),
+            'revenue' => (float) Payment::whereBetween('created_at', [$startDate, $endDate])
+                ->where('status', 'completed')
+                ->sum('amount'),
+        ];
+
+        $previous = [
+            'new_users' => User::whereBetween('created_at', [$previousStartDate, $previousEndDate])->count(),
+            'new_properties' => Property::whereBetween('created_at', [$previousStartDate, $previousEndDate])->count(),
+            'new_messages' => Message::whereBetween('created_at', [$previousStartDate, $previousEndDate])->count(),
+            'new_reviews' => Review::whereBetween('created_at', [$previousStartDate, $previousEndDate])->count(),
+            'completed_payments' => Payment::whereBetween('created_at', [$previousStartDate, $previousEndDate])
+                ->where('status', 'completed')
+                ->count(),
+            'revenue' => (float) Payment::whereBetween('created_at', [$previousStartDate, $previousEndDate])
+                ->where('status', 'completed')
+                ->sum('amount'),
+        ];
+
+        $propertyApprovalRate = $current['new_properties'] > 0
+            ? round(
+                (Property::whereBetween('created_at', [$startDate, $endDate])
+                    ->where('is_approved', true)
+                    ->count() / $current['new_properties']) * 100,
+                2
+            )
+            : 0;
+
+        $bucketExpression = $this->buildDateBucketExpression('created_at', $groupBy);
+
+        $userTrend = User::selectRaw("{$bucketExpression} as bucket, COUNT(*) as count")
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->groupBy('bucket')
+            ->orderBy('bucket')
+            ->get();
+
+        $propertyTrend = Property::selectRaw("{$bucketExpression} as bucket, COUNT(*) as count")
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->groupBy('bucket')
+            ->orderBy('bucket')
+            ->get();
+
+        $messageTrend = Message::selectRaw("{$bucketExpression} as bucket, COUNT(*) as count")
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->groupBy('bucket')
+            ->orderBy('bucket')
+            ->get();
+
+        $paymentTrend = Payment::selectRaw("{$bucketExpression} as bucket, SUM(amount) as total")
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->where('status', 'completed')
+            ->groupBy('bucket')
+            ->orderBy('bucket')
+            ->get();
+
+        $topAgents = User::query()
+            ->select('users.id', 'users.name', DB::raw('COUNT(properties.id) as properties_count'))
+            ->leftJoin('properties', function ($join) use ($startDate, $endDate) {
+                $join->on('properties.user_id', '=', 'users.id')
+                    ->whereBetween('properties.created_at', [$startDate, $endDate]);
+            })
+            ->where('users.role', 'agent')
+            ->groupBy('users.id', 'users.name')
+            ->orderByDesc('properties_count')
+            ->limit(10)
+            ->get();
+
+        $topLocationsData = Property::query()
+            ->select('city', 'state', DB::raw('COUNT(*) as count'))
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->groupBy('city', 'state')
+            ->orderByDesc('count')
+            ->limit($topLocations)
+            ->get();
+
+        $propertiesByType = Property::query()
+            ->select('property_type', DB::raw('COUNT(*) as count'))
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->groupBy('property_type')
+            ->orderByDesc('count')
+            ->get();
+
+        return response()->json([
+            'filters' => [
+                'start_date' => $startDate->toDateString(),
+                'end_date' => $endDate->toDateString(),
+                'group_by' => $groupBy,
+                'top_locations' => $topLocations,
+            ],
+            'kpis' => [
+                'current' => $current,
+                'previous' => $previous,
+                'growth' => [
+                    'new_users' => $this->calculateGrowth($current['new_users'], $previous['new_users']),
+                    'new_properties' => $this->calculateGrowth($current['new_properties'], $previous['new_properties']),
+                    'new_messages' => $this->calculateGrowth($current['new_messages'], $previous['new_messages']),
+                    'new_reviews' => $this->calculateGrowth($current['new_reviews'], $previous['new_reviews']),
+                    'completed_payments' => $this->calculateGrowth($current['completed_payments'], $previous['completed_payments']),
+                    'revenue' => $this->calculateGrowth($current['revenue'], $previous['revenue']),
+                ],
+                'property_approval_rate' => $propertyApprovalRate,
+            ],
+            'trends' => [
+                'users' => $userTrend,
+                'properties' => $propertyTrend,
+                'messages' => $messageTrend,
+                'payments' => $paymentTrend,
+            ],
+            'top_agents' => $topAgents,
+            'top_locations' => $topLocationsData,
+            'properties_by_type' => $propertiesByType,
+        ]);
+    }
+
+    /**
+     * Export advanced report in csv, json, or txt formats.
+     */
+    public function exportAdvancedReport(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'format' => 'required|in:csv,json,txt',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'group_by' => 'nullable|in:day,week,month',
+            'top_locations' => 'nullable|integer|min:1|max:50',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $reportResponse = $this->advancedReport($request);
+        if ($reportResponse->getStatusCode() !== 200) {
+            return $reportResponse;
+        }
+
+        /** @var array<string,mixed> $data */
+        $data = json_decode($reportResponse->getContent(), true) ?? [];
+        $format = $request->input('format', 'csv');
+        $dateTag = now()->format('Ymd_His');
+        $filename = "advanced_report_{$dateTag}.{$format}";
+
+        return match ($format) {
+            'json' => response(
+                json_encode($data, JSON_PRETTY_PRINT),
+                200,
+                [
+                    'Content-Type' => 'application/json',
+                    'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+                ]
+            ),
+            'txt' => response(
+                $this->buildAdvancedReportTxt($data),
+                200,
+                [
+                    'Content-Type' => 'text/plain; charset=UTF-8',
+                    'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+                ]
+            ),
+            default => response(
+                $this->buildAdvancedReportCsv($data),
+                200,
+                [
+                    'Content-Type' => 'text/csv; charset=UTF-8',
+                    'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+                ]
+            ),
+        };
+    }
+
+    private function calculateGrowth(float|int $current, float|int $previous): float
+    {
+        if ((float) $previous === 0.0) {
+            return (float) $current > 0 ? 100.0 : 0.0;
+        }
+
+        return round((($current - $previous) / $previous) * 100, 2);
+    }
+
+    private function buildDateBucketExpression(string $column, string $groupBy): string
+    {
+        $driver = DB::connection()->getDriverName();
+
+        if ($driver === 'sqlite') {
+            return match ($groupBy) {
+                'week' => "strftime('%Y-W%W', {$column})",
+                'month' => "strftime('%Y-%m', {$column})",
+                default => "strftime('%Y-%m-%d', {$column})",
+            };
+        }
+
+        return match ($groupBy) {
+            'week' => "DATE_FORMAT({$column}, '%x-W%v')",
+            'month' => "DATE_FORMAT({$column}, '%Y-%m')",
+            default => "DATE_FORMAT({$column}, '%Y-%m-%d')",
+        };
+    }
+
+    /**
+     * Build a lightweight CSV export for the advanced report.
+     *
+     * @param  array<string,mixed>  $data
+     */
+    private function buildAdvancedReportCsv(array $data): string
+    {
+        $rows = [];
+        $rows[] = ['Section', 'Metric', 'Value'];
+
+        foreach (($data['kpis']['current'] ?? []) as $metric => $value) {
+            $rows[] = ['Current KPI', (string) $metric, (string) $value];
+        }
+
+        foreach (($data['kpis']['growth'] ?? []) as $metric => $value) {
+            $rows[] = ['Growth (%)', (string) $metric, (string) $value];
+        }
+
+        foreach (($data['top_agents'] ?? []) as $agent) {
+            $rows[] = ['Top Agents', (string) ($agent['name'] ?? 'N/A'), (string) ($agent['properties_count'] ?? 0)];
+        }
+
+        foreach (($data['top_locations'] ?? []) as $location) {
+            $label = trim(((string) ($location['city'] ?? '')) . ', ' . ((string) ($location['state'] ?? '')), ', ');
+            $rows[] = ['Top Locations', $label, (string) ($location['count'] ?? 0)];
+        }
+
+        $stream = fopen('php://temp', 'r+');
+        foreach ($rows as $row) {
+            fputcsv($stream, $row);
+        }
+        rewind($stream);
+        $csv = stream_get_contents($stream) ?: '';
+        fclose($stream);
+
+        return $csv;
+    }
+
+    /**
+     * Build plain text export for the advanced report.
+     *
+     * @param  array<string,mixed>  $data
+     */
+    private function buildAdvancedReportTxt(array $data): string
+    {
+        $lines = [];
+        $lines[] = 'Advanced Report';
+        $lines[] = str_repeat('=', 48);
+        $lines[] = 'Filters:';
+        $lines[] = '- Start Date: ' . ($data['filters']['start_date'] ?? 'N/A');
+        $lines[] = '- End Date: ' . ($data['filters']['end_date'] ?? 'N/A');
+        $lines[] = '- Group By: ' . ($data['filters']['group_by'] ?? 'N/A');
+        $lines[] = '';
+        $lines[] = 'Current KPIs:';
+        foreach (($data['kpis']['current'] ?? []) as $metric => $value) {
+            $lines[] = '- ' . $metric . ': ' . $value;
+        }
+        $lines[] = '';
+        $lines[] = 'Growth (%):';
+        foreach (($data['kpis']['growth'] ?? []) as $metric => $value) {
+            $lines[] = '- ' . $metric . ': ' . $value . '%';
+        }
+        $lines[] = '';
+        $lines[] = 'Top Agents:';
+        foreach (($data['top_agents'] ?? []) as $agent) {
+            $lines[] = '- ' . ($agent['name'] ?? 'N/A') . ': ' . ($agent['properties_count'] ?? 0);
+        }
+        $lines[] = '';
+        $lines[] = 'Top Locations:';
+        foreach (($data['top_locations'] ?? []) as $location) {
+            $lines[] = '- ' . ($location['city'] ?? '') . ', ' . ($location['state'] ?? '') . ': ' . ($location['count'] ?? 0);
+        }
+
+        return implode("\n", $lines) . "\n";
     }
 }
