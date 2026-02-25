@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             AmenitySeeder::class,
             UserSeeder::class,
+            RolePermissionSeeder::class,
             SubscriptionPlanSeeder::class,
             FeaturedListingPackageSeeder::class,
             PropertySeeder::class,
