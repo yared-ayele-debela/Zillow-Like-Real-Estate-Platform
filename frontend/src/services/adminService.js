@@ -12,6 +12,19 @@ const adminService = {
     return response.data;
   },
 
+  getAdvancedReport: async (params = {}) => {
+    const response = await api.get('/admin/reports/advanced', { params });
+    return response.data;
+  },
+
+  downloadAdvancedReport: async (params = {}, format = 'csv') => {
+    const response = await api.get('/admin/reports/advanced/export', {
+      params: { ...params, format },
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
   // User Management
   getUsers: async (params = {}) => {
     const response = await api.get('/admin/users', { params });
