@@ -20,6 +20,7 @@ import ReviewsDisplay from '../components/review/ReviewsDisplay';
 import ReviewForm from '../components/review/ReviewForm';
 import ContactForm from '../components/message/ContactForm';
 import TourRequestForm from '../components/message/TourRequestForm';
+import MapSearch from '../components/search/MapSearch';
 
 const PropertyDetail = () => {
   const { id } = useParams();
@@ -101,6 +102,7 @@ const PropertyDetail = () => {
   const nearbyProperties = propertyData?.nearby_properties || [];
   const similarProperties = propertyData?.similar_properties || [];
   const stats = propertyData?.stats || {};
+  const neighborhood = propertyData?.neighborhood || null;
 
 
   const isOwner = isAuthenticated && user?.id === property.user_id;
@@ -282,6 +284,41 @@ const PropertyDetail = () => {
               </div>
             )}
 
+            {/* Neighborhood & Schools */}
+            {neighborhood && (neighborhood.schools || []).length > 0 && (
+              <div className="bg-white rounded-lg shadow p-6">
+                <h2 className="text-xl font-semibold mb-4">Neighborhood &amp; Schools</h2>
+                <p className="text-sm text-gray-500 mb-4">
+                  Nearby schools and education options based on this property&apos;s location.
+                </p>
+                <div className="space-y-3">
+                  {neighborhood.schools.slice(0, 5).map((school, idx) => (
+                    <div
+                      key={`${school.name}-${idx}`}
+                      className="flex items-start justify-between border border-gray-100 rounded-lg px-3 py-2"
+                    >
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900">
+                          {school.name}
+                        </p>
+                        {school.address && (
+                          <p className="text-xs text-gray-500">{school.address}</p>
+                        )}
+                        <p className="text-[11px] text-gray-400 mt-0.5">
+                          {(school.categories || []).join(', ')}
+                        </p>
+                      </div>
+                      {school.distance_m != null && (
+                        <span className="ml-3 text-xs text-gray-500 whitespace-nowrap">
+                          {(school.distance_m / 1000).toFixed(1)} km
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Price History Chart */}
             {priceHistory.length > 0 && (
               <PriceHistoryChart priceHistory={priceHistory} />
@@ -291,11 +328,15 @@ const PropertyDetail = () => {
             {property.latitude && property.longitude && (
               <div className="bg-white rounded-lg shadow p-6">
                 <h2 className="text-xl font-semibold mb-4">Location</h2>
-                <div className="h-64 bg-gray-200 rounded flex items-center justify-center">
-                  {/* TODO: Integrate Mapbox or Google Maps */}
-                  <p className="text-gray-500">
-                    Map will be displayed here (Mapbox integration needed)
-                  </p>
+                <div className="h-64 rounded overflow-hidden">
+                  <MapSearch
+                    properties={[property]}
+                    onPropertyClick={(clickedProperty) =>
+                      navigate(`/properties/${clickedProperty.id}`)
+                    }
+                    enableBoundsFilter={false}
+                    heightClass="h-64"
+                  />
                 </div>
               </div>
             )}

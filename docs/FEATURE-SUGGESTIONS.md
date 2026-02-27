@@ -5,21 +5,21 @@ Recommendations for high-value features to add, based on your current stack (Lar
 ---
 
 ## High impact, strong fit
-
+<!-- 
 ### 1. **Property comparison**
 - **What:** Let users select 2–4 properties and view a side-by-side comparison (price, beds, baths, sq ft, location, key amenities).
 - **Why:** Common on major real estate sites; reduces back-and-forth and helps decision-making.
-- **Fit:** You already have property list + detail; add a “Compare” checkbox on cards and a `/compare?ids=1,2,3` page that loads those properties and renders a comparison table.
-
+- **Fit:** You already have property list + detail; add a “Compare” checkbox on cards and a `/compare?ids=1,2,3` page that loads those properties and renders a comparison table. -->
+<!-- 
 ### 2. **Mortgage / affordability calculator**
 - **What:** “How much can I afford?” — input income, debts, down payment; output max price and estimated monthly payment (P&I, optional taxes/insurance).
 - **Why:** Highly used by buyers; keeps users on site and positions you as helpful.
-- **Fit:** Pure frontend (React) component + optional backend endpoint to save “my budget” to profile. No need to change core property logic.
-
+- **Fit:** Pure frontend (React) component + optional backend endpoint to save “my budget” to profile. No need to change core property logic. -->
+<!-- 
 ### 3. **Virtual tours / media**
 - **What:** Embed or link 360° tours, Matterport/iframe, or at least a structured “video tour” URL per property.
 - **Why:** Your Home page already mentions “virtual tours”; making it real improves engagement and trust.
-- **Fit:** Add `virtual_tour_url` (and optionally `video_tour_url`) to properties; display on PropertyDetail and in search cards (icon/badge).
+- **Fit:** Add `virtual_tour_url` (and optionally `video_tour_url`) to properties; display on PropertyDetail and in search cards (icon/badge). -->
 
 ### 4. **“Similar properties” and “Notify when similar”**
 - **What:** On property detail: “Similar properties” (same area, similar price/beds). Option: “Notify me when a similar listing appears.”
@@ -35,10 +35,10 @@ Recommendations for high-value features to add, based on your current stack (Lar
 
 ## High impact, medium effort
 
-### 6. **Neighborhood / school data**
+<!-- ### 6. **Neighborhood / school data**
 - **What:** Show schools near the property (with ratings/distances), walk/transit scores, or “neighborhood” summary.
 - **Why:** Buyers care a lot about schools and area; improves SEO and perceived value.
-- **Fit:** Integrate a third-party API (e.g. GreatSchools, Walk Score, or a combined provider); cache by lat/lng or address; show on PropertyDetail and optionally in list view.
+- **Fit:** Integrate a third-party API (e.g. GreatSchools, Walk Score, or a combined provider); cache by lat/lng or address; show on PropertyDetail and optionally in list view. -->
 
 ### 7. **Lead pipeline / CRM for agents**
 - **What:** Agents move leads through stages (New → Contacted → Viewed → Offer → Closed); add notes, next follow-up date, and simple lead scoring.
@@ -83,15 +83,15 @@ Recommendations for high-value features to add, based on your current stack (Lar
 
 ## Trust and conversion
 
-### 14. **Verified agent / badge**
+<!-- ### 14. **Verified agent / badge**
 - **What:** Admin marks agents as “Verified” (e.g. license checked); show badge on agent profile and on listings.
 - **Why:** Trust and differentiation from unverified listings.
-- **Fit:** `users.is_verified` or `agents.verified_at`; admin toggle; show badge in AgentDetail and PropertyCard/PropertyDetail when listing has verified agent.
+- **Fit:** `users.is_verified` or `agents.verified_at`; admin toggle; show badge in AgentDetail and PropertyCard/PropertyDetail when listing has verified agent. -->
 
-### 15. **Price history (visible to buyers)**
+<!-- ### 15. **Price history (visible to buyers)**
 - **What:** Show “Price history” on property detail: list of price changes (date, price, event type if applicable).
 - **Why:** Your Home copy mentions “price history”; builds trust and engagement.
-- **Fit:** Store price changes (e.g. `property_price_history`: property_id, price, changed_at, event); update on property price change; API + PropertyDetail section.
+- **Fit:** Store price changes (e.g. `property_price_history`: property_id, price, changed_at, event); update on property price change; API + PropertyDetail section. -->
 
 ### 16. **SEO and share previews**
 - **What:** Per-property meta title/description and Open Graph image; sitemap of listing URLs; optional JSON-LD for Listing.

@@ -15,7 +15,7 @@ class SavedSearchController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        
+
         $savedSearches = $user->savedSearches()
             ->orderBy('created_at', 'desc')
             ->get();
