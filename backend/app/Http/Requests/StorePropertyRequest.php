@@ -41,6 +41,8 @@ class StorePropertyRequest extends FormRequest
             'amenities.*' => ['exists:amenities,id'],
             'images' => ['nullable', 'array', 'max:20'],
             'images.*' => ['image', 'mimes:jpeg,jpg,png,gif', 'max:5120'], // 5MB max
+            'virtual_tour_url' => ['nullable', 'url', 'max:2048'],
+            'video_tour_url' => ['nullable', 'url', 'max:2048'],
         ];
     }
 }

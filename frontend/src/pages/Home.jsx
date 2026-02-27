@@ -208,8 +208,9 @@ const Home = () => {
               {[
                 { to: '/properties', label: 'Browse' },
                 { to: '/properties?is_featured=1', label: 'Featured' },
+                { to: '/mortgage-calculator', label: 'Affordability' },
               ].map((link) => (
-              <Link
+                <Link
                   key={link.to}
                   to={link.to}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -219,7 +220,7 @@ const Home = () => {
                   }`}
                 >
                   {link.label}
-              </Link>
+                </Link>
               ))}
 
               {isAuthenticated ? (

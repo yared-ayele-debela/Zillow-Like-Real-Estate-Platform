@@ -11,6 +11,7 @@ import Home from './pages/Home';
 import PropertyList from './components/property/PropertyList';
 import PropertyDetail from './pages/PropertyDetail';
 import CompareProperties from './pages/CompareProperties';
+import MortgageCalculator from './pages/MortgageCalculator';
 import AgentDetail from './pages/AgentDetail';
 import PropertyForm from './components/property/PropertyForm';
 import ProtectedRoute from './components/auth/ProtectedRoute';
@@ -30,6 +31,7 @@ import FeaturedListing from './pages/FeaturedListing';
 import Subscription from './pages/Subscription';
 import PaymentHistory from './pages/PaymentHistory';
 import Notifications from './pages/Notifications';
+import MainLayout from './components/layout/MainLayout';
 import './App.css';
 
 const queryClient = new QueryClient();
@@ -45,52 +47,69 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <Router>
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={isAuthenticated ? <Navigate to="/" /> : <LoginForm />} />
-          <Route
-            path="/register"
-            element={isAuthenticated ? <Navigate to="/" /> : <RegisterForm />}
-          />
-          <Route path="/forgot-password" element={<ForgotPasswordForm />} />
-          <Route path="/reset-password" element={<ResetPasswordForm />} />
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/messages"
-            element={
-              <ProtectedRoute>
-                <Messages />
-              </ProtectedRoute>
-            }
-          />
-          
-          {/* Property Routes */}
-          <Route path="/properties" element={<PropertyList />} />
-          <Route path="/properties/:id" element={<PropertyDetail />} />
-          <Route path="/compare" element={<CompareProperties />} />
-          <Route path="/agents/:id" element={<AgentDetail />} />
-          <Route
-            path="/properties/new"
-            element={
-              <ProtectedRoute>
-                <PropertyForm />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/properties/:id/edit"
-            element={
-              <ProtectedRoute>
-                <PropertyForm />
-              </ProtectedRoute>
-            }
-          />
+          <Route element={<MainLayout />}>
+            <Route path="/" element={<Home />} />
+            <Route
+              path="/login"
+              element={isAuthenticated ? <Navigate to="/" /> : <LoginForm />}
+            />
+            <Route
+              path="/register"
+              element={isAuthenticated ? <Navigate to="/" /> : <RegisterForm />}
+            />
+            <Route path="/forgot-password" element={<ForgotPasswordForm />} />
+            <Route path="/reset-password" element={<ResetPasswordForm />} />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/messages"
+              element={
+                <ProtectedRoute>
+                  <Messages />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Property Routes */}
+            <Route path="/properties" element={<PropertyList />} />
+            <Route path="/properties/:id" element={<PropertyDetail />} />
+            <Route path="/compare" element={<CompareProperties />} />
+            <Route
+              path="/mortgage-calculator"
+              element={<MortgageCalculator />}
+            />
+            <Route path="/agents/:id" element={<AgentDetail />} />
+            <Route
+              path="/properties/new"
+              element={
+                <ProtectedRoute>
+                  <PropertyForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/properties/:id/edit"
+              element={
+                <ProtectedRoute>
+                  <PropertyForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/notifications"
+              element={
+                <ProtectedRoute>
+                  <Notifications />
+                </ProtectedRoute>
+              }
+            />
+          </Route>
 
           {/* Agent Routes */}
           <Route
@@ -192,7 +211,7 @@ function App() {
             }
           />
 
-          {/* Payment Routes */}
+          {/* Payment Routes (no main layout) */}
           <Route
             path="/feature-listing"
             element={
@@ -214,14 +233,6 @@ function App() {
             element={
               <ProtectedRoute>
                 <PaymentHistory />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/notifications"
-            element={
-              <ProtectedRoute>
-                <Notifications />
               </ProtectedRoute>
             }
           />

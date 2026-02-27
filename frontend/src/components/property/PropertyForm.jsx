@@ -44,6 +44,8 @@ const PropertyForm = ({ property: propData = null, isEdit = false }) => {
       square_feet: '',
       year_built: '',
       lot_size: '',
+      virtual_tour_url: '',
+      video_tour_url: '',
     },
   });
 
@@ -416,6 +418,38 @@ const PropertyForm = ({ property: propData = null, isEdit = false }) => {
                 min="0"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Virtual tour URL (3D / 360°)
+                </label>
+                <input
+                  {...register('virtual_tour_url')}
+                  type="url"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="https://my-3d-tour.example.com"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  Link to a Matterport or other interactive 3D/360° tour.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Video tour URL
+                </label>
+                <input
+                  {...register('video_tour_url')}
+                  type="url"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="https://youtube.com/..."
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  Public video link (YouTube, Vimeo, or similar).
+                </p>
+              </div>
             </div>
           </div>
         )}

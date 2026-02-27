@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { MapPinIcon, Squares2X2Icon } from '@heroicons/react/24/outline';
+import { MapPinIcon, Squares2X2Icon, PlayCircleIcon } from '@heroicons/react/24/outline';
 import FavoriteButton from './FavoriteButton';
 
 const PropertyCard = ({
@@ -93,6 +93,13 @@ const PropertyCard = ({
           </span>
           <span className="text-sm text-gray-500 capitalize">{property.status.replace('_', ' ')}</span>
         </div>
+
+        {(property.virtual_tour_url || property.video_tour_url) && (
+          <div className="mb-2 inline-flex items-center rounded-full bg-indigo-50 text-indigo-700 px-2 py-1 text-[11px] font-medium">
+            <PlayCircleIcon className="w-3 h-3 mr-1" />
+            Virtual tour available
+          </div>
+        )}
 
         <div className="flex items-center gap-4 text-sm text-gray-600 border-t pt-3">
           {property.bedrooms && (

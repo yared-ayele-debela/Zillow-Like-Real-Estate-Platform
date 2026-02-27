@@ -36,6 +36,8 @@ class Property extends Model
         'is_featured',
         'is_approved',
         'price_history',
+        'virtual_tour_url',
+        'video_tour_url',
     ];
 
     protected $casts = [

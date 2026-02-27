@@ -5,6 +5,8 @@ import {
   HomeIcon,
   CalendarIcon,
   Square3Stack3DIcon,
+  PlayCircleIcon,
+  PhotoIcon,
 } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
 import usePropertyStore from '../store/propertyStore';
@@ -162,6 +164,53 @@ const PropertyDetail = () => {
               <h2 className="text-xl font-semibold mb-4">Description</h2>
               <p className="text-gray-700 whitespace-pre-line">{property.description}</p>
             </div>
+
+            {/* Virtual Tour & Media */}
+            {(property.virtual_tour_url || property.video_tour_url) && (
+              <div className="bg-white rounded-lg shadow p-6">
+                <h2 className="text-xl font-semibold mb-4">Virtual Tour &amp; Media</h2>
+                <div className="space-y-4">
+                  {property.virtual_tour_url && (
+                    <div>
+                      <div className="flex items-center mb-2">
+                        <PlayCircleIcon className="w-5 h-5 text-indigo-600 mr-2" />
+                        <span className="text-sm font-medium text-gray-800">
+                          Interactive 3D / 360° Tour
+                        </span>
+                      </div>
+                      <div className="aspect-video w-full rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
+                        <iframe
+                          src={property.virtual_tour_url}
+                          title="Virtual Tour"
+                          className="w-full h-full border-0"
+                          allow="xr-spatial-tracking; accelerometer; gyroscope; autoplay; fullscreen"
+                          loading="lazy"
+                        />
+                      </div>
+                    </div>
+                  )}
+                  {property.video_tour_url && (
+                    <div>
+                      <div className="flex items-center mb-2">
+                        <PhotoIcon className="w-5 h-5 text-indigo-600 mr-2" />
+                        <span className="text-sm font-medium text-gray-800">
+                          Video Tour
+                        </span>
+                      </div>
+                      <a
+                        href={property.video_tour_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium text-indigo-600 border border-indigo-200 hover:bg-indigo-50"
+                      >
+                        <PlayCircleIcon className="w-4 h-4 mr-2" />
+                        Open video tour in new tab
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Property Details */}
             <div className="bg-white rounded-lg shadow p-6">
