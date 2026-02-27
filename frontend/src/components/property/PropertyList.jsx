@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import usePropertyStore from '../../store/propertyStore';
 import PropertyCard from './PropertyCard';
 import SaveSearchModal from '../search/SaveSearchModal';
@@ -12,6 +12,7 @@ const BED_BATH_OPTIONS = ['1', '2', '3', '4', '5'];
 
 const PropertyList = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const {
     properties,
     isLoading,
@@ -26,6 +27,7 @@ const PropertyList = () => {
   const [selectedPropertyId, setSelectedPropertyId] = useState(null);
   const [areaFilterIds, setAreaFilterIds] = useState(null);
   const [selectedAreaName, setSelectedAreaName] = useState('');
+  const [compareIds, setCompareIds] = useState([]);
 
   useEffect(() => {
     // Sync URL params with filters
@@ -67,6 +69,20 @@ const PropertyList = () => {
   const handleFavoriteToggle = (propertyId) => {
     // TODO: Implement favorite toggle
     console.log('Toggle favorite for property:', propertyId);
+  };
+
+  const handleCompareToggle = (propertyId) => {
+    setCompareIds((prev) => {
+      if (prev.includes(propertyId)) {
+        return prev.filter((id) => id !== propertyId);
+      }
+
+      if (prev.length >= 4) {
+        return prev;
+      }
+
+      return [...prev, propertyId];
+    });
   };
 
   const handlePageChange = (newPage) => {
@@ -187,6 +203,17 @@ const PropertyList = () => {
             >
               List
             </button>
+            {compareIds.length > 0 && (
+              <button
+                onClick={() => {
+                  const idsParam = compareIds.join(',');
+                  navigate(`/compare?ids=${idsParam}`);
+                }}
+                className="ml-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-600 text-sm font-medium"
+              >
+                Compare ({compareIds.length})
+              </button>
+            )}
           </div>
         </div>
 
@@ -470,6 +497,8 @@ const PropertyList = () => {
                       property={property}
                       onFavoriteToggle={handleFavoriteToggle}
                       isFavorite={false} // TODO: Get from favorites store
+                      isSelectedForCompare={compareIds.includes(property.id)}
+                      onCompareToggle={() => handleCompareToggle(property.id)}
                     />
                   </div>
                 ))}

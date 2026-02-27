@@ -1,15 +1,21 @@
 import { Link } from 'react-router-dom';
-import { MapPinIcon } from '@heroicons/react/24/outline';
+import { MapPinIcon, Squares2X2Icon } from '@heroicons/react/24/outline';
 import FavoriteButton from './FavoriteButton';
 
-const PropertyCard = ({ property, onFavoriteToggle, isFavorite = false }) => {
+const PropertyCard = ({
+  property,
+  onFavoriteToggle,
+  isFavorite = false,
+  isSelectedForCompare = false,
+  onCompareToggle,
+}) => {
   const primaryImage = property.images?.find((img) => img.is_primary) || property.images?.[0];
   const imageUrl = primaryImage
     ? `${process.env.REACT_APP_API_URL?.replace('/api', '')}/storage/${primaryImage.image_path}`
     : '/placeholder-property.jpg';
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300">
+    <div className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 border border-gray-100">
       <Link to={`/properties/${property.id}`}>
         <div className="relative h-48 bg-gray-200">
           {primaryImage ? (
@@ -29,12 +35,35 @@ const PropertyCard = ({ property, onFavoriteToggle, isFavorite = false }) => {
             </span>
           )}
           <div
-            className="absolute top-2 right-2"
+            className="absolute top-2 right-2 flex items-center gap-2"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
             }}
           >
+            <button
+              type="button"
+              className={`inline-flex items-center rounded-full border px-2 py-1 text-[11px] font-medium backdrop-blur-sm transition-colors ${
+                isSelectedForCompare
+                  ? 'border-indigo-600 bg-indigo-600/90 text-white shadow-sm'
+                  : 'border-white/70 bg-black/30 text-white hover:bg-black/40'
+              }`}
+              onClick={onCompareToggle}
+            >
+              <span
+                className={`mr-1 inline-flex h-3 w-3 items-center justify-center rounded-[3px] border ${
+                  isSelectedForCompare
+                    ? 'border-white bg-white'
+                    : 'border-white/70 bg-transparent'
+                }`}
+              >
+                {isSelectedForCompare && (
+                  <span className="block h-2 w-2 rounded-[2px] bg-indigo-600" />
+                )}
+              </span>
+              <Squares2X2Icon className="mr-1 h-3 w-3" />
+              Compare
+            </button>
             <FavoriteButton
               propertyId={property.id}
               savesCount={property.saves || 0}

@@ -21,6 +21,21 @@ class PropertySearchService
             $query->where('is_approved', true);
         }
 
+        // Explicit ID filter (used for comparison view)
+        if (!empty($filters['ids'])) {
+            $ids = is_array($filters['ids'])
+                ? $filters['ids']
+                : explode(',', (string) $filters['ids']);
+
+            $ids = array_filter(array_map('trim', $ids));
+
+            if (!empty($ids)) {
+                $query->whereIn('id', $ids);
+            }
+
+            return $query;
+        }
+
         // Text search
         if (!empty($filters['search'])) {
             $query = $this->searchByText($query, $filters['search']);

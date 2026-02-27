@@ -54,6 +54,7 @@ class PropertyController extends Controller
             'featured',
             'sort_by',
             'sort_order',
+            'ids',
         ]);
 
         // Handle amenities array
