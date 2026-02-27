@@ -9,24 +9,29 @@ use App\Models\Property;
 use App\Services\GeocodingService;
 use App\Services\PropertySearchService;
 use App\Services\NearbyPropertiesService;
+use App\Services\NeighborhoodDataService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class PropertyController extends Controller
 {
     protected GeocodingService $geocodingService;
     protected PropertySearchService $searchService;
     protected NearbyPropertiesService $nearbyService;
+    protected NeighborhoodDataService $neighborhoodService;
 
     public function __construct(
         GeocodingService $geocodingService,
         PropertySearchService $searchService,
-        NearbyPropertiesService $nearbyService
+        NearbyPropertiesService $nearbyService,
+        NeighborhoodDataService $neighborhoodService
     ) {
         $this->geocodingService = $geocodingService;
         $this->searchService = $searchService;
         $this->nearbyService = $nearbyService;
+        $this->neighborhoodService = $neighborhoodService;
     }
 
     /**
@@ -217,12 +222,16 @@ class PropertyController extends Controller
             'reviews_count' => $property->getReviewsCount(),
         ];
 
+        // Get neighborhood data (schools, scores, etc.)
+        $neighborhood = $this->neighborhoodService->getForProperty($property);
+
         return response()->json([
             'property' => $property,
             'price_history' => $priceHistory,
             'nearby_properties' => $nearbyProperties,
             'similar_properties' => $similarProperties,
             'stats' => $stats,
+            'neighborhood' => $neighborhood,
         ]);
     }
 
@@ -390,7 +399,7 @@ class PropertyController extends Controller
 
             return $thumbnailPath;
         } catch (\Exception $e) {
-            \Log::error('Thumbnail creation failed', [
+            Log::error('Thumbnail creation failed', [
                 'image' => $imagePath,
                 'error' => $e->getMessage(),
             ]);
