@@ -1,10 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  CurrencyDollarIcon,
-  HomeIcon,
-  CalculatorIcon,
-} from '@heroicons/react/24/outline';
+import { CurrencyDollarIcon, HomeIcon } from '@heroicons/react/24/outline';
 
 const formatCurrency = (value) =>
   value !== null && value !== undefined && !Number.isNaN(value)
@@ -70,7 +66,7 @@ const MortgageCalculator = () => {
     <div className="min-h-screen bg-gray-50">
       
 
-      <main className="max-w-5xl mx-auto px-4 py-8 grid gap-8 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+      <main className="max-w-6xl mx-auto px-4 py-8 grid gap-8 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         {/* Inputs */}
         <section className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-6">
           <h2 className="text-sm font-semibold text-gray-700 tracking-wide uppercase">
