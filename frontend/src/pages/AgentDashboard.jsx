@@ -68,6 +68,13 @@ const AgentDashboard = () => {
   const stats = dashboardData?.statistics || {};
   const recentProperties = dashboardData?.recent_properties || [];
   const recentMessages = dashboardData?.recent_messages || [];
+  const performanceData = dashboardData?.performance_data || [];
+
+  const totalViews = stats.total_properties ? stats.total_views || 0 : 0;
+  const avgViewsPerListing =
+    stats.total_properties && stats.total_properties > 0
+      ? totalViews / stats.total_properties
+      : 0;
 
   const statCards = [
     {
@@ -287,6 +294,102 @@ const AgentDashboard = () => {
                 </div>
               )}
             </div>
+          </div>
+        </div>
+
+        {/* Listing performance */}
+        <div className="mt-8 bg-white rounded-lg shadow border border-gray-200">
+          <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">Listing performance</h2>
+              <p className="mt-1 text-sm text-gray-600">
+                Views and saves by listing, compared to your average.
+              </p>
+            </div>
+            {avgViewsPerListing > 0 && (
+              <p className="text-xs text-gray-500">
+                Avg views per listing:{' '}
+                <span className="font-semibold text-gray-800">
+                  {Math.round(avgViewsPerListing).toLocaleString()}
+                </span>
+              </p>
+            )}
+          </div>
+
+          <div className="p-6">
+            {performanceData.length === 0 ? (
+              <p className="text-sm text-gray-500">
+                Once you have active listings with activity, you&apos;ll see per‑listing
+                performance here.
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {performanceData
+                  .slice(0, 7)
+                  .sort((a, b) => (b.views || 0) - (a.views || 0))
+                  .map((item) => {
+                    const views = item.views || 0;
+                    const saves = item.saves || 0;
+                    const maxViews =
+                      performanceData.reduce(
+                        (max, p) => (p.views && p.views > max ? p.views : max),
+                        0,
+                      ) || 1;
+                    const viewsPercent = Math.min((views / maxViews) * 100, 100);
+                    const savesPercent = Math.min((saves / maxViews) * 100, 100);
+                    const deltaFromAvg =
+                      avgViewsPerListing > 0
+                        ? ((views - avgViewsPerListing) / avgViewsPerListing) * 100
+                        : 0;
+                    const deltaLabel =
+                      avgViewsPerListing > 0
+                        ? `${deltaFromAvg >= 0 ? '+' : ''}${Math.round(deltaFromAvg)}% vs your avg`
+                        : 'No average yet';
+
+                    return (
+                      <div
+                        key={item.id}
+                        className="border border-gray-200 rounded-lg p-3 hover:border-indigo-300 hover:bg-indigo-50/40 transition"
+                      >
+                        <div className="flex items-center justify-between gap-3 mb-2">
+                          <p className="text-sm font-medium text-gray-900 line-clamp-1">
+                            {item.title}
+                          </p>
+                          <p className="text-xs text-gray-500 whitespace-nowrap">
+                            {deltaLabel}
+                          </p>
+                        </div>
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between text-xs text-gray-600">
+                            <span>Views</span>
+                            <span className="font-medium text-gray-900">
+                              {views.toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="h-2 w-full rounded-full bg-gray-100 overflow-hidden">
+                            <div
+                              className="h-2 bg-indigo-600 rounded-full"
+                              style={{ width: `${viewsPercent}%` }}
+                            />
+                          </div>
+                          <div className="flex items-center justify-between text-xs text-gray-600 mt-1">
+                            <span>Saves</span>
+                            <span className="font-medium text-gray-900">
+                              {saves.toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="h-1.5 w-full rounded-full bg-gray-100 overflow-hidden">
+                            <div
+                              className="h-1.5 bg-emerald-500 rounded-full"
+                              style={{ width: `${savesPercent}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
           </div>
         </div>
         </div>
