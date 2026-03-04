@@ -19,6 +19,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import AgentDashboard from './pages/AgentDashboard';
 import MyProperties from './pages/MyProperties';
 import Leads from './pages/Leads';
+import Offers from './pages/Offers';
 import Analytics from './pages/Analytics';
 import Messages from './pages/Messages';
 import AdminDashboard from './pages/AdminDashboard';
@@ -151,6 +152,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Leads />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/agent/offers"
+            element={
+              <ProtectedRoute>
+                <Offers />
               </ProtectedRoute>
             }
           />

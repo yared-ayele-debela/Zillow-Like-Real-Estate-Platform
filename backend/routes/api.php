@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\AgentController;
 use App\Http\Controllers\Api\AgentDashboardController;
 use App\Http\Controllers\Api\LeadController;
 use App\Http\Controllers\Api\MessageController;
+use App\Http\Controllers\Api\OfferController;
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PaymentController;
@@ -155,6 +156,13 @@ Route::middleware(['auth:sanctum', 'role:agent,admin'])->group(function () {
     Route::post('/agent/leads/{id}/reply', [LeadController::class, 'reply']);
     Route::get('/agent/leads/export', [LeadController::class, 'export']);
     Route::patch('/agent/leads/{id}', [LeadController::class, 'update']);
+
+    // Offers / negotiation tracking
+    Route::get('/agent/offers', [OfferController::class, 'index']);
+    Route::post('/agent/offers', [OfferController::class, 'store']);
+    Route::get('/agent/offers/{id}', [OfferController::class, 'show']);
+    Route::put('/agent/offers/{id}', [OfferController::class, 'update']);
+    Route::delete('/agent/offers/{id}', [OfferController::class, 'destroy']);
 });
 
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
