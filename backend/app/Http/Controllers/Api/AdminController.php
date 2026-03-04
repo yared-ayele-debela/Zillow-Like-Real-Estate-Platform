@@ -340,7 +340,7 @@ class AdminController extends Controller
     }
 
     /**
-     * Get pending reviews.
+     * Get reviews list for admin (with optional filters).
      */
     public function pendingReviews(Request $request)
     {
@@ -352,9 +352,37 @@ class AdminController extends Controller
             ], 403);
         }
 
-        $reviews = Review::where('is_approved', false)
-            ->with(['user:id,name,avatar', 'property:id,title', 'agent:id,name'])
-            ->orderBy('created_at', 'desc')
+        $query = Review::query()
+            ->with(['user:id,name,avatar', 'property:id,title', 'agent:id,name']);
+
+        // Filter by status: pending, approved, or all
+        if ($request->filled('status')) {
+            if ($request->status === 'pending') {
+                $query->where('is_approved', false);
+            } elseif ($request->status === 'approved') {
+                $query->where('is_approved', true);
+            }
+            // 'all' => no status filter
+        } else {
+            $query->where('is_approved', false); // default: pending only
+        }
+
+        // Filter by rating (1-5)
+        if ($request->filled('rating') && $request->rating >= 1 && $request->rating <= 5) {
+            $query->where('rating', (int) $request->rating);
+        }
+
+        // Filter by property
+        if ($request->filled('property_id')) {
+            $query->where('property_id', $request->property_id);
+        }
+
+        // Filter by agent
+        if ($request->filled('agent_id')) {
+            $query->where('agent_id', $request->agent_id);
+        }
+
+        $reviews = $query->orderBy('created_at', 'desc')
             ->paginate($request->get('per_page', 15));
 
         return response()->json($reviews);

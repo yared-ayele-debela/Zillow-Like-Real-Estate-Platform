@@ -21,8 +21,10 @@ import MyProperties from './pages/MyProperties';
 import Leads from './pages/Leads';
 import Offers from './pages/Offers';
 import Analytics from './pages/Analytics';
+import AgentProfile from './pages/AgentProfile';
 import Messages from './pages/Messages';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminProfile from './pages/AdminProfile';
 import AdminUsers from './pages/AdminUsers';
 import AdminProperties from './pages/AdminProperties';
 import AdminReviews from './pages/AdminReviews';
@@ -171,6 +173,14 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/agent/profile"
+            element={
+              <ProtectedRoute>
+                <AgentProfile />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Admin Routes */}
           <Route
@@ -226,6 +236,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <AdminSettings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/profile"
+            element={
+              <ProtectedRoute>
+                <AdminProfile />
               </ProtectedRoute>
             }
           />

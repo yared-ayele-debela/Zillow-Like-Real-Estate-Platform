@@ -28,6 +28,7 @@ const AgentLayout = ({ children }) => {
     { name: 'Offers', href: '/agent/offers', icon: BanknotesIcon },
     { name: 'Analytics', href: '/agent/analytics', icon: ChartBarIcon },
     { name: 'Add Property', href: '/properties/new', icon: PlusCircleIcon },
+    { name: 'Profile', href: '/agent/profile', icon: UserCircleIcon },
   ];
 
   const isActive = (path) => location.pathname === path || location.pathname.startsWith(`${path}/`);
