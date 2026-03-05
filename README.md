@@ -1,43 +1,92 @@
-# Zillow Clone - Real Estate Platform
+# Zillow Clone – Real Estate Platform
 
-Full-stack real estate platform with a Laravel API backend and a React frontend.
-It supports authentication, property listings, search and map features, favorites,
-messaging, reviews, role-based dashboards, and Stripe-powered payments.
+Full-stack real estate listing platform with a **Laravel API** backend and **React** frontend. It supports authentication, property search, favorites, messaging, reviews, role-based dashboards (Agent & Admin), Stripe payments, real-time notifications, and more.
 
-## Recent Additions
+---
 
-- Admin Location Management with persistent CRUD and seeded Italian locations.
-- Admin Site and Email Settings with database persistence (`app_settings` table).
-- Agent dashboard shared layout for agent-specific pages.
-- Real-time notifications (Laravel broadcasting + Echo + Pusher/Reverb-compatible config).
-- Admin Roles and Permissions management (Spatie Permission) with full backend CRUD and React UI.
-- Comprehensive sample seeders for required business tables.
+## Features
 
-## Project Structure
+### Public & Buyers
 
-- `backend` - Laravel 12 API, authentication (Sanctum), roles/permissions, Stripe integration
-- `frontend` - React app (Create React App) for the client UI
-- `documents` - implementation guides, setup notes, and Postman assets
+- **Home** – Featured properties, search by location/type
+- **Property list** – Browse with filters (price, beds, baths, type, status, location), sort, map view (Mapbox)
+- **Property detail** – Gallery (with default placeholder when images are missing), amenities, map, contact/inquire, favorite, compare
+- **Compare properties** – Side-by-side comparison (`/compare?ids=1,2,3`)
+- **Mortgage calculator** – Affordability and monthly payment estimate
+- **Agent profile** – Public agent page with listings and contact
+- **Auth** – Register, login, forgot/reset password, email verification
+- **Profile** – Update profile and avatar, change password (main site `/profile`)
+- **Favorites** – Save and manage favorite properties
+- **Saved searches** – Save search criteria and get notified for new matches (optional job)
+- **Messages** – Inbox, conversation threads, tour requests
+- **Reviews** – Submit and view property reviews (pending approval)
+- **Notifications** – Real-time (Pusher/Reverb) and in-app list
+- **Payments** – Subscription plans, featured listing packages, payment history (Stripe)
+
+### Agents
+
+- **Agent dashboard** (`/agent/dashboard`) – Stats, recent leads, recent offers, quick links
+- **My properties** – List, filter, add, edit, view stats
+- **Add/Edit property** – Full form with image upload, reorder, primary image
+- **Property stats** – Views and performance per property
+- **Leads** – Inbox, view, reply, mark read, export
+- **Offers** – Create, view, update, delete offers linked to properties/leads
+- **Analytics** – Charts and metrics
+- **Profile** – Profile and password update inside dashboard (`/agent/profile`)
+
+### Admins
+
+- **Admin dashboard** (`/admin/dashboard`) – Overview, pending properties, recent users
+- **Users** – List, edit, delete
+- **Properties** – List, approve, reject, feature
+- **Reviews** – Moderate pending reviews (approve/reject)
+- **Analytics** – Platform analytics
+- **Reports** – Advanced reports with filters and export
+- **Locations** – CRUD and sync from properties
+- **Settings** – Site settings and email settings
+- **Payment config** – Subscription plans and featured listing packages (CRUD)
+- **Roles & permissions** – Full CRUD for roles and permissions (Spatie)
+- **Profile** – Profile and password update inside dashboard (`/admin/profile`)
+
+---
 
 ## Tech Stack
 
-- Backend: PHP 8.2+, Laravel 12, Sanctum, Spatie Permission, Stripe PHP
-- Frontend: React, React Router, React Query, Tailwind CSS, Stripe Elements, Mapbox
-- Database: SQLite by default (can be switched in backend `.env`)
+| Layer    | Stack |
+|----------|--------|
+| Backend  | PHP 8.2+, Laravel 12, Sanctum, Spatie Permission, Stripe, Intervention Image, Pusher (broadcasting) |
+| Frontend | React 19, React Router 7, TanStack Query, Tailwind CSS, Zustand, Axios, Stripe Elements, Mapbox GL, Recharts, Laravel Echo, Heroicons |
+| Database | SQLite by default (configurable via `.env`) |
+
+---
+
+## Project Structure
+
+```
+Zillow/
+├── backend/          # Laravel 12 API (auth, properties, payments, admin, agent, notifications)
+├── frontend/         # React SPA (Create React App, Tailwind)
+├── documents/        # Postman collection, setup guides, feature suggestions
+└── README.md
+```
+
+---
 
 ## Prerequisites
 
 - PHP 8.2+
 - Composer
 - Node.js 18+ and npm
-- A SQL database if you do not use SQLite
+- SQLite (or MySQL/PostgreSQL if you change backend config)
+
+---
 
 ## Quick Start
 
-### 1) Backend Setup
+### 1. Backend
 
 ```bash
-cd /home/yared/Desktop/Projects/Zillow/backend
+cd backend
 composer install
 cp .env.example .env
 php artisan key:generate
@@ -47,53 +96,33 @@ php artisan storage:link
 npm install
 ```
 
-Run backend services:
+Run API:
 
 ```bash
-# API only
 php artisan serve
-
-# Optional: run API + queue + logs + Vite watcher together
-composer run dev
+# Or, with queue + logs + Vite: composer run dev
 ```
 
-Default API URL: `http://localhost:8000`
+API base: **http://localhost:8000**
 
-### Seed Sample Data (All Required Tables)
-
-To rebuild and seed everything in one command:
+#### Fresh migrate + seed (all tables)
 
 ```bash
-cd /home/yared/Desktop/Projects/Zillow/backend
+cd backend
 php artisan migrate:fresh --seed --force
 ```
 
-Seeders now include:
+Seed data includes: users (admin, agents, buyers), amenities, properties & images, locations, reviews, favorites, saved searches, messages, subscription plans, featured packages, payments, app settings, notifications.
 
-- Users (admin, agents, buyers, guest)
-- Amenities
-- Properties and property images
-- Locations
-- Reviews
-- Favorites
-- Saved searches
-- Messages
-- Subscription plans
-- Featured listing packages
-- Subscriptions
-- Payments
-- App settings (site/email)
-- Notifications
-
-### 2) Frontend Setup
+### 2. Frontend
 
 ```bash
-cd /home/yared/Desktop/Projects/Zillow/frontend
+cd frontend
 npm install
 cp .env.example .env
 ```
 
-If `.env.example` is not present in `frontend`, create `.env` manually with:
+Ensure `frontend/.env` has at least:
 
 ```env
 REACT_APP_API_URL=http://localhost:8000/api
@@ -101,71 +130,114 @@ REACT_APP_MAPBOX_TOKEN=your_mapbox_token
 REACT_APP_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
 ```
 
-Start frontend:
+Start app:
 
 ```bash
 npm start
 ```
 
-Default app URL: `http://localhost:3000`
+App URL: **http://localhost:3000**
 
-## Backend Environment Variables
+---
 
-Set these in `backend/.env` as needed:
+## Environment Variables
 
-- `APP_URL` (example: `http://localhost:8000`)
-- `DB_*` variables for your database connection
-- `SANCTUM_STATEFUL_DOMAINS` (for frontend auth cookies/session behavior)
-- `SESSION_DOMAIN` (if you use custom/local domains)
-- `GOOGLE_MAPS_API_KEY` (optional geocoding/maps features)
-- `STRIPE_KEY`
-- `STRIPE_SECRET`
-- `STRIPE_WEBHOOK_SECRET`
-- Broadcasting (for real-time notifications):
-  - `BROADCAST_DRIVER`
-  - `PUSHER_APP_ID`
-  - `PUSHER_APP_KEY`
-  - `PUSHER_APP_SECRET`
-  - `PUSHER_APP_CLUSTER`
-  - `PUSHER_HOST` (optional)
-  - `PUSHER_PORT` (optional)
-  - `PUSHER_SCHEME` (optional)
+### Backend (`.env`)
 
-## Common Commands
+- `APP_URL` – e.g. `http://localhost:8000`
+- `DB_*` – Database connection (SQLite default)
+- `SANCTUM_STATEFUL_DOMAINS` – For frontend auth
+- `SESSION_DOMAIN` – If using custom/local domains
+- `STRIPE_KEY`, `STRIPE_SECRET`, `STRIPE_WEBHOOK_SECRET`
+- **Broadcasting (notifications):** `BROADCAST_DRIVER`, `PUSHER_APP_*`, `PUSHER_HOST`, `PUSHER_PORT`, `PUSHER_SCHEME` (or Reverb equivalents)
+- `GOOGLE_MAPS_API_KEY` – Optional for geocoding/maps
 
-Backend:
+### Frontend (`.env`)
+
+- `REACT_APP_API_URL` – Backend API base URL (e.g. `http://localhost:8000/api`)
+- `REACT_APP_MAPBOX_TOKEN` – Mapbox map tiles
+- `REACT_APP_STRIPE_PUBLISHABLE_KEY` – Stripe publishable key
+
+---
+
+## Main Routes (Frontend)
+
+| Route | Description |
+|-------|-------------|
+| `/` | Home |
+| `/properties` | Property list (filters, map) |
+| `/properties/:id` | Property detail |
+| `/compare` | Compare properties (`?ids=1,2,3`) |
+| `/mortgage-calculator` | Mortgage calculator |
+| `/agents/:id` | Agent public profile |
+| `/login`, `/register` | Auth |
+| `/profile` | User profile (main site) |
+| `/agent/dashboard` | Agent dashboard |
+| `/agent/properties` | Agent properties |
+| `/agent/leads` | Agent leads |
+| `/agent/offers` | Agent offers |
+| `/agent/analytics` | Agent analytics |
+| `/agent/profile` | Agent profile (in dashboard) |
+| `/admin/dashboard` | Admin dashboard |
+| `/admin/users` | User management |
+| `/admin/properties` | Property moderation |
+| `/admin/reviews` | Review moderation |
+| `/admin/analytics` | Admin analytics |
+| `/admin/reports` | Reports |
+| `/admin/settings` | Site & email settings, roles/permissions, payment config |
+| `/admin/profile` | Admin profile (in dashboard) |
+| `/messages` | Messages |
+| `/notifications` | Notifications |
+| `/subscription` | Subscription plans |
+| `/feature-listing` | Featured listing packages |
+| `/payments/history` | Payment history |
+
+---
+
+## API Overview
+
+- **Auth:** `POST /register`, `POST /login`, `POST /logout`, `GET /user`, forgot/reset password, email verification
+- **Profile:** `GET/PUT /profile`, `POST /profile/change-password`
+- **Properties:** `GET /properties`, `GET /properties/:id` (public); `POST/PUT/DELETE` (auth); images upload/reorder/delete
+- **Agents:** `GET /agents/:id` (public)
+- **Search:** `GET /search`, `GET /search/bounds`, filter options, suggestions
+- **Favorites, saved searches, reviews, messages, notifications** – REST-style under `/api`
+- **Payments:** `POST /payments`, confirm, history, refund; feature property; subscriptions
+- **Agent:** `/agent/dashboard`, `/agent/properties`, `/agent/leads`, `/agent/offers`, property stats
+- **Admin:** `/admin/*` – dashboard, users, properties, reviews, analytics, reports, locations, settings, payment config, roles & permissions
+
+See `backend/routes/api.php` for full list. Postman: `documents/postman_collection.json`, `documents/postman_environment.json`; setup: `documents/POSTMAN_SETUP.md`.
+
+---
+
+## Default Property Image
+
+When a property has no images or an image fails to load, the app uses a default placeholder from **`frontend/public/default_images/property-placeholder.svg`**. You can replace it with your own file (e.g. `property-placeholder.jpg`) and update `frontend/src/utils/defaultImages.js` to point to it.
+
+---
+
+## Commands
+
+**Backend**
 
 ```bash
-cd /home/yared/Desktop/Projects/Zillow/backend
+cd backend
 php artisan test
 composer run test
 ```
 
-Frontend:
+**Frontend**
 
 ```bash
-cd /home/yared/Desktop/Projects/Zillow/frontend
+cd frontend
 npm test
 npm run build
 ```
 
-## API and Docs
+---
 
-- API routes are defined in `backend/routes/api.php`
-- Admin settings and management routes include:
-  - `/api/admin/settings/*`
-  - `/api/admin/locations/*`
-  - `/api/admin/roles/*`
-  - `/api/admin/permissions/*`
-- Postman collection and environment:
-  - `documents/postman_collection.json`
-  - `documents/postman_environment.json`
-- Setup guide:
-  - `documents/POSTMAN_SETUP.md`
+## Documentation
 
-## Notes
-
-- The backend and frontend currently contain default framework READMEs in
-  `backend/README.md` and `frontend/README.md`.
-- This root README is the primary entry point for running the full project.
-- Roles & Permissions UI is available in the Admin Dashboard under `Settings > Roles & Permissions`.
+- **Root:** This README
+- **Backend:** `backend/README.md` (Laravel)
+- **Frontend:** `frontend/README.md` (project scripts and structure)
