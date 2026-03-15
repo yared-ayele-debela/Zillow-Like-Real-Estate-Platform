@@ -1,10 +1,72 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { MagnifyingGlassIcon, MapPinIcon, HomeIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
+import {
+  MagnifyingGlassIcon,
+  MapPinIcon,
+  HomeIcon,
+  ArrowRightIcon,
+  CurrencyDollarIcon,
+  Squares2X2Icon,
+  UserGroupIcon,
+  ShieldCheckIcon,
+} from '@heroicons/react/24/outline';
 import { propertyService } from '../services/propertyService';
+import { agentService } from '../services/agentService';
 import { DEFAULT_PROPERTY_IMAGE } from '../utils/defaultImages';
 import { propertySlug } from '../utils/propertyRoute';
+
+const getAvatarUrl = (avatar) => {
+  if (!avatar) return null;
+  if (avatar.startsWith('http')) return avatar;
+  return `${process.env.REACT_APP_API_URL?.replace('/api', '')}/storage/${avatar}`;
+};
+
+const PropertyCard = ({ property }) => {
+  const primaryImage =
+    property.images?.find((img) => img.is_primary) ?? property.images?.[0];
+  const imageUrl = primaryImage
+    ? `${process.env.REACT_APP_API_URL?.replace('/api', '')}/storage/${primaryImage.image_path}`
+    : null;
+
+  return (
+    <Link
+      to={`/properties/${propertySlug(property)}`}
+      className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all overflow-hidden"
+    >
+      <div className="h-44 bg-gray-100 relative">
+        <img
+          src={imageUrl || DEFAULT_PROPERTY_IMAGE}
+          alt={property.title}
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = DEFAULT_PROPERTY_IMAGE;
+          }}
+        />
+        <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
+          {property.formatted_price || `$${Number(property.price).toLocaleString()}`}
+        </div>
+      </div>
+      <div className="p-4">
+        <h3 className="text-sm font-semibold text-gray-900 line-clamp-1">{property.title}</h3>
+        <div className="mt-1 flex items-center text-xs text-gray-500">
+          <MapPinIcon className="w-4 h-4 mr-1" />
+          <span className="line-clamp-1">
+            {property.city}, {property.state}
+          </span>
+        </div>
+        <div className="mt-3 flex items-center gap-3 text-xs text-gray-600">
+          {property.bedrooms != null && <span>{property.bedrooms} bd</span>}
+          {property.bathrooms != null && <span>{property.bathrooms} ba</span>}
+          {property.square_feet != null && (
+            <span>{Number(property.square_feet).toLocaleString()} sqft</span>
+          )}
+        </div>
+      </div>
+    </Link>
+  );
+};
 
 const Home = () => {
   const navigate = useNavigate();
@@ -17,7 +79,26 @@ const Home = () => {
     staleTime: 5 * 60 * 1000,
   });
 
+  const { data: newestData } = useQuery({
+    queryKey: ['newestProperties'],
+    queryFn: () =>
+      propertyService.getProperties({
+        per_page: 6,
+        sort_by: 'created_at',
+        sort_order: 'desc',
+      }),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: agentsData } = useQuery({
+    queryKey: ['homeAgents'],
+    queryFn: () => agentService.getAgents({ per_page: 4 }),
+    staleTime: 5 * 60 * 1000,
+  });
+
   const featuredProperties = featuredData?.data || featuredData?.properties?.data || [];
+  const newestProperties = newestData?.data || newestData?.properties?.data || [];
+  const agents = agentsData?.data || [];
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -115,63 +196,159 @@ const Home = () => {
             </p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {featuredProperties.map((property) => {
-                const primaryImage =
-                  property.images?.find((img) => img.is_primary) ?? property.images?.[0];
-                const imageUrl = primaryImage
-                  ? `${process.env.REACT_APP_API_URL?.replace('/api', '')}/storage/${primaryImage.image_path}`
-                  : null;
-
-                return (
-                  <Link
-                    key={property.id}
-                    to={`/properties/${propertySlug(property)}`}
-                    className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all overflow-hidden"
-                  >
-                    <div className="h-44 bg-gray-100 relative">
-                      <img
-                        src={imageUrl || DEFAULT_PROPERTY_IMAGE}
-                        alt={property.title}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = DEFAULT_PROPERTY_IMAGE;
-                        }}
-                      />
-                      <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
-                        {property.formatted_price ||
-                          `$${Number(property.price).toLocaleString()}`}
-                      </div>
-                    </div>
-                    <div className="p-4">
-                      <h3 className="text-sm font-semibold text-gray-900 line-clamp-1">
-                        {property.title}
-                      </h3>
-                      <div className="mt-1 flex items-center text-xs text-gray-500">
-                        <MapPinIcon className="w-4 h-4 mr-1" />
-                        <span className="line-clamp-1">
-                          {property.city}, {property.state}
-                        </span>
-                      </div>
-                      <div className="mt-3 flex items-center gap-3 text-xs text-gray-600">
-                        {property.bedrooms != null && (
-                          <span>{property.bedrooms} bd</span>
-                        )}
-                        {property.bathrooms != null && (
-                          <span>{property.bathrooms} ba</span>
-                        )}
-                        {property.square_feet != null && (
-                          <span>{Number(property.square_feet).toLocaleString()} sqft</span>
-                        )}
-                      </div>
-                    </div>
-                  </Link>
-                );
-              })}
+              {featuredProperties.map((property) => (
+                <PropertyCard key={property.id} property={property} />
+              ))}
             </div>
           )}
         </div>
       </section>
+
+      {/* New listings */}
+      {newestProperties.length > 0 && (
+        <section className="py-10 sm:py-12 bg-white border-t border-gray-100">
+          <div className="max-w-6xl mx-auto px-4">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">
+                New listings
+              </h2>
+              <Link
+                to="/properties?sort_by=created_at&sort_order=desc"
+                className="inline-flex items-center text-sm text-indigo-600 hover:text-indigo-700"
+              >
+                View all
+                <ArrowRightIcon className="w-4 h-4 ml-1" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {newestProperties.map((property) => (
+                <PropertyCard key={property.id} property={property} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* How we help / Tools */}
+      <section className="py-10 sm:py-12">
+        <div className="max-w-6xl mx-auto px-4">
+          <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-6">
+            How we help
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <Link
+              to="/mortgage-calculator"
+              className="group flex flex-col sm:flex-row sm:items-center gap-4 p-5 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all"
+            >
+              <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                <CurrencyDollarIcon className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 group-hover:text-indigo-700">
+                  Affordability calculator
+                </h3>
+                <p className="text-sm text-gray-500 mt-0.5">
+                  See how much you can afford and estimate monthly payments.
+                </p>
+              </div>
+            </Link>
+            <Link
+              to="/compare"
+              className="group flex flex-col sm:flex-row sm:items-center gap-4 p-5 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all"
+            >
+              <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                <Squares2X2Icon className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 group-hover:text-indigo-700">
+                  Compare homes
+                </h3>
+                <p className="text-sm text-gray-500 mt-0.5">
+                  Side-by-side comparison of price, beds, baths, and more.
+                </p>
+              </div>
+            </Link>
+            <Link
+              to="/agents"
+              className="group flex flex-col sm:flex-row sm:items-center gap-4 p-5 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all"
+            >
+              <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                <UserGroupIcon className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 group-hover:text-indigo-700">
+                  Find an agent
+                </h3>
+                <p className="text-sm text-gray-500 mt-0.5">
+                  Browse verified agents and view their listings.
+                </p>
+              </div>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Featured agents */}
+      {agents.length > 0 && (
+        <section className="py-10 sm:py-12 bg-white border-t border-gray-100">
+          <div className="max-w-6xl mx-auto px-4">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">
+                Meet our agents
+              </h2>
+              <Link
+                to="/agents"
+                className="inline-flex items-center text-sm text-indigo-600 hover:text-indigo-700"
+              >
+                View all agents
+                <ArrowRightIcon className="w-4 h-4 ml-1" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {agents.map((agent) => {
+                const avatarUrl = getAvatarUrl(agent.avatar);
+                return (
+                  <Link
+                    key={agent.id}
+                    to={`/agents/${agent.id}`}
+                    className="flex flex-col items-center text-center p-5 bg-gray-50 rounded-xl border border-gray-100 hover:shadow-md hover:border-indigo-100 transition-all group"
+                  >
+                    <div className="w-16 h-16 rounded-full bg-white overflow-hidden flex items-center justify-center text-xl font-bold text-gray-600 ring-2 ring-gray-100 shadow-sm mb-3">
+                      {avatarUrl ? (
+                        <img
+                          src={avatarUrl}
+                          alt={agent.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        (agent.name || 'A').charAt(0).toUpperCase()
+                      )}
+                    </div>
+                    <div className="flex flex-wrap items-center justify-center gap-1.5">
+                      <h3 className="text-sm font-semibold text-gray-900 group-hover:text-indigo-600">
+                        {agent.name}
+                      </h3>
+                      {agent.is_verified && (
+                        <ShieldCheckIcon className="w-4 h-4 text-emerald-500" aria-label="Verified" />
+                      )}
+                    </div>
+                    {agent.company_name && (
+                      <p className="mt-0.5 text-xs text-indigo-600 font-medium">{agent.company_name}</p>
+                    )}
+                    <p className="mt-1 text-xs text-gray-500">
+                      {agent.approved_properties_count ?? 0} listing
+                      {(agent.approved_properties_count ?? 0) !== 1 ? 's' : ''}
+                    </p>
+                    <span className="mt-2 text-xs font-medium text-indigo-600 group-hover:underline">
+                      View profile →
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   );
 };

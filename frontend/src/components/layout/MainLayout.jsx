@@ -247,7 +247,6 @@ const MainLayout = () => {
                       Browse properties
                     </Link>
                   </li>
-                 
                   <li>
                     <Link to="/properties?is_featured=1" className="hover:text-indigo-600">
                       Featured listings
